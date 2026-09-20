@@ -58,12 +58,20 @@ import {
   Moon,
   Check,
   ChevronDown,
+  PanelLeftClose,
+  PanelLeft,
+  Menu,
+  X,
 } from 'lucide-react';
 
 export const App: React.FC = () => {
   // Navigation
   const [activeTab, setActiveTab] = useState<string>('dashboard');
   const [isThemeMenuOpen, setIsThemeMenuOpen] = useState<boolean>(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => {
+    return localStorage.getItem('fe_sidebar_collapsed') === 'true';
+  });
+  const [isMobileNavOpen, setIsMobileNavOpen] = useState<boolean>(false);
 
   // Persistence State
   const [settings, setSettings] = useState<UserSettings>(() => {
@@ -166,6 +174,10 @@ export const App: React.FC = () => {
     localStorage.setItem('fe_vocab_list', JSON.stringify(vocabList));
   }, [vocabList]);
 
+  useEffect(() => {
+    localStorage.setItem('fe_sidebar_collapsed', String(isSidebarCollapsed));
+  }, [isSidebarCollapsed]);
+
   // Keyboard Navigation Shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -174,6 +186,10 @@ export const App: React.FC = () => {
       if (e.key === 't' || e.key === 'T') setActiveTab('algorithm-workshop');
       if (e.key === 's' || e.key === 'S') setActiveTab('scanner');
       if (e.key === 'd' || e.key === 'D') setActiveTab('dashboard');
+      if (e.key === '[' || (e.ctrlKey && e.key === 'b') || (e.metaKey && e.key === 'b')) {
+        e.preventDefault();
+        setIsSidebarCollapsed((prev) => !prev);
+      }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
@@ -240,20 +256,57 @@ export const App: React.FC = () => {
     if (data.settings) setSettings(data.settings);
   };
 
-  const tabs = [
-    { id: 'dashboard', label: '📊 ダッシュボード', icon: <LayoutDashboard size={15} /> },
-    { id: 'planner', label: '📅 日別計画', icon: <Calendar size={15} /> },
-    { id: 'scanner', label: '📷 Scan & OCR', icon: <Camera size={15} /> },
-    { id: 'curriculum', label: '📚 3冊の教材', icon: <BookOpen size={15} /> },
-    { id: 'algorithm-workshop', label: '💻 擬似言語 B', icon: <Code2 size={15} /> },
-    { id: 'security-workshop', label: '🛡️ セキュリティ', icon: <ShieldCheck size={15} /> },
-    { id: 'exam-simulator', label: '📝 模擬試験', icon: <Award size={15} /> },
-    { id: 'error-notebook', label: '🔁 復習ノート', icon: <RotateCcw size={15} /> },
-    { id: 'vocab-hub', label: '📖 Mazii用語集', icon: <BookA size={15} /> },
-    { id: 'pomodoro', label: '🍅 Pomodoro', icon: <Clock size={15} /> },
-    { id: 'survival-guide', label: '💡 5つの盲点', icon: <Compass size={15} /> },
-    { id: 'settings', label: '⚙️ 設定', icon: <Settings size={15} /> },
+  const unmasteredErrorCount = errorNotes.filter((n) => !n.mastered).length;
+
+  const navSections = [
+    {
+      title: 'Tổng quan',
+      items: [
+        { id: 'dashboard', label: 'Dashboard', jpName: 'ダッシュボード', icon: <LayoutDashboard size={17} /> },
+        { id: 'planner', label: 'Kế hoạch 30 ngày', jpName: '日別計画', icon: <Calendar size={17} /> },
+      ],
+    },
+    {
+      title: 'Luyện thi chuyên sâu',
+      items: [
+        { id: 'algorithm-workshop', label: 'Thuật toán & Trace B', jpName: '擬似言語 B', icon: <Code2 size={17} /> },
+        { id: 'security-workshop', label: 'Bảo mật thông tin', jpName: '情報セキュリティ', icon: <ShieldCheck size={17} /> },
+        { id: 'exam-simulator', label: 'Thi thử & Mock Test', jpName: '過去問・模擬試験', icon: <Award size={17} /> },
+      ],
+    },
+    {
+      title: 'Giáo trình & Từ vựng',
+      items: [
+        { id: 'curriculum', label: 'Giáo trình 3 cuốn', jpName: '3冊の教材', icon: <BookOpen size={17} /> },
+        { id: 'vocab-hub', label: 'Mazii IT Từ vựng', jpName: 'IT用語集', icon: <BookA size={17} /> },
+        { id: 'scanner', label: 'Scan & OCR Sách', jpName: 'Scan & OCR AI', icon: <Camera size={17} /> },
+      ],
+    },
+    {
+      title: 'Công cụ & Ôn tập',
+      items: [
+        { id: 'pomodoro', label: 'Pomodoro Focus', jpName: '集中タイマー', icon: <Clock size={17} /> },
+        {
+          id: 'error-notebook',
+          label: 'Sổ tay lỗi sai',
+          jpName: '復習ノート',
+          icon: <RotateCcw size={17} />,
+          badge: unmasteredErrorCount > 0 ? unmasteredErrorCount : undefined,
+        },
+        { id: 'survival-guide', label: '5 Điểm mù phòng thi', jpName: '5つの盲点', icon: <Compass size={17} /> },
+      ],
+    },
+    {
+      title: 'Hệ thống',
+      items: [
+        { id: 'settings', label: 'Cấu hình & Backup', jpName: '設定・データ', icon: <Settings size={17} /> },
+      ],
+    },
   ];
+
+  const allNavItems = navSections.flatMap((s) => s.items);
+  const currentItem = allNavItems.find((item) => item.id === activeTab) || allNavItems[0];
+  const currentSection = navSections.find((s) => s.items.some((item) => item.id === activeTab));
 
   return (
     <div className="min-h-screen bg-sumi-950 text-sumi-100 flex flex-col selection:bg-blue-600 selection:text-white">
@@ -263,31 +316,66 @@ export const App: React.FC = () => {
       )}
 
       {/* Top Navbar */}
-      <header className="sticky top-0 z-40 bg-sumi-950/85 backdrop-blur-xl border-b border-sumi-800/80 shrink-0 transition-colors duration-200">
-        <div className="max-w-7xl mx-auto px-4 h-15 flex items-center justify-between gap-4">
-          {/* Logo & Brand */}
-          <div className="flex items-center gap-3 cursor-pointer select-none" onClick={() => setActiveTab('dashboard')}>
-            <div className="w-8 h-8 rounded-lg bg-sumi-850 border border-sumi-700/90 flex items-center justify-center font-bold text-emerald-400 font-mono text-sm shadow-sm relative overflow-hidden group">
-              <span className="relative z-10">基</span>
-              <div className="absolute inset-0 bg-emerald-500/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="font-bold text-sm tracking-tight text-sumi-100 flex items-center gap-1.5">
-                  FE STUDY HUB <span className="text-[10px] px-1.5 py-0.2 rounded bg-sumi-850 border border-sumi-700/80 text-sumi-400 font-normal">v1.0</span>
+      <header className="sticky top-0 z-40 bg-sumi-950/90 backdrop-blur-xl border-b border-sumi-800/80 shrink-0 transition-colors duration-200">
+        <div className="w-full px-3 sm:px-5 h-14 flex items-center justify-between gap-3">
+          {/* Left: Sidebar Toggle + Mobile Hamburger + Brand + Breadcrumb */}
+          <div className="flex items-center gap-2.5 sm:gap-3.5 min-w-0">
+            <button
+              type="button"
+              onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+              className="hidden md:flex p-1.5 rounded-lg text-sumi-400 hover:text-sumi-100 hover:bg-sumi-850 border border-transparent hover:border-sumi-700/80 transition-colors"
+              title={isSidebarCollapsed ? 'Mở rộng thanh điều hướng (Phím [)' : 'Thu gọn thanh điều hướng (Phím [)'}
+            >
+              {isSidebarCollapsed ? <PanelLeft size={18} /> : <PanelLeftClose size={18} />}
+            </button>
+
+            {/* Mobile Hamburger Toggle */}
+            <button
+              type="button"
+              onClick={() => setIsMobileNavOpen(!isMobileNavOpen)}
+              className="md:hidden p-1.5 rounded-lg text-sumi-400 hover:text-sumi-100 hover:bg-sumi-850 border border-transparent hover:border-sumi-700/80 transition-colors"
+              title="Menu điều hướng"
+            >
+              {isMobileNavOpen ? <X size={19} /> : <Menu size={19} />}
+            </button>
+
+            {/* Logo & Brand */}
+            <div className="flex items-center gap-2.5 cursor-pointer select-none" onClick={() => setActiveTab('dashboard')}>
+              <div className="w-7 h-7 rounded-lg bg-sumi-850 border border-sumi-700/90 flex items-center justify-center font-bold text-emerald-400 font-mono text-xs shadow-sm relative overflow-hidden group">
+                <span className="relative z-10">基</span>
+                <div className="absolute inset-0 bg-emerald-500/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+              </div>
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="font-bold text-sm tracking-tight text-sumi-100 whitespace-nowrap">
+                  FE STUDY HUB
                 </span>
-                <span className="hidden md:inline-flex items-center gap-1 text-[11px] font-mono px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/25">
-                  ⏳ 19/04/2026 (Còn 29 ngày)
+                <span className="text-[10px] px-1.5 py-0.2 rounded bg-sumi-850 border border-sumi-700/80 text-sumi-400 font-normal hidden sm:inline">
+                  v1.0
                 </span>
               </div>
-              <span className="text-[10px] text-sumi-400 block font-mono">基本情報技術者試験 (Syllabus 9.1)</span>
+            </div>
+
+            {/* Breadcrumb indicator */}
+            <div className="hidden lg:flex items-center gap-2 pl-3 border-l border-sumi-800 text-xs text-sumi-400 font-medium truncate">
+              <span>{currentSection?.title}</span>
+              <span className="text-sumi-600">/</span>
+              <span className="text-sumi-200 font-semibold flex items-center gap-1.5">
+                <span className="text-[var(--theme-accent,#38bdf8)]">{currentItem?.icon}</span>
+                <span>{currentItem?.label}</span>
+                <span className="text-sumi-500 font-normal">({currentItem?.jpName})</span>
+              </span>
             </div>
           </div>
 
           {/* Quick Actions, Theme Switcher & Lock */}
           <div className="flex items-center gap-2 sm:gap-3">
+            {/* Exam Countdown Chip */}
+            <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-mono px-2.5 py-1 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/25 shadow-xs">
+              ⏳ 19/04/2026 (Còn 29 ngày)
+            </span>
+
             {/* Streak Badge */}
-            <div className="hidden sm:flex items-center gap-1 text-xs font-mono text-amber-400 bg-sumi-850/90 border border-sumi-800 px-2.5 py-1.5 rounded-lg shadow-sm">
+            <div className="hidden md:flex items-center gap-1 text-xs font-mono text-amber-400 bg-sumi-850/90 border border-sumi-800 px-2.5 py-1.5 rounded-lg shadow-sm">
               <Flame size={14} className="text-amber-400 animate-pulse" />
               <span>{settings.streakDays} Day Streak</span>
             </div>
@@ -410,127 +498,289 @@ export const App: React.FC = () => {
             )}
           </div>
         </div>
-
-        {/* Modern Segmented Navigation Tabs */}
-        <div className="max-w-7xl mx-auto px-4 overflow-x-auto scrollbar-none py-1.5 flex items-center gap-1.5 border-t border-sumi-800/50">
-          {tabs.map((tab) => {
-            const isActive = activeTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium whitespace-nowrap rounded-lg transition-all duration-150 ${
-                  isActive
-                    ? 'bg-sumi-850 text-sumi-100 font-semibold border border-sumi-700 shadow-sm theme-accent-border'
-                    : 'text-sumi-400 hover:text-sumi-200 hover:bg-sumi-850/60 border border-transparent'
-                }`}
-              >
-                <span className={isActive ? 'text-[var(--theme-accent,#38bdf8)]' : ''}>{tab.icon}</span>
-                <span>{tab.label}</span>
-              </button>
-            );
-          })}
-        </div>
       </header>
 
-      {/* Main Content Area */}
-      <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6">
-        {activeTab === 'dashboard' && (
-          <DashboardView
-            schedule={schedule}
-            books={books}
-            examScores={examScores}
-            onNavigateTab={setActiveTab}
-            onExportExcel={handleExportExcel}
-          />
+      {/* App Main Shell: Sidebar + Content */}
+      <div className="flex-1 flex min-h-[calc(100vh-3.5rem)] relative">
+        {/* Left Sidebar (Desktop) */}
+        <aside
+          className={`hidden md:flex flex-col shrink-0 border-r border-sumi-800/80 bg-sumi-900/40 backdrop-blur-md sticky top-14 h-[calc(100vh-3.5rem)] transition-all duration-200 z-30 select-none ${
+            isSidebarCollapsed ? 'w-16' : 'w-64'
+          }`}
+        >
+          {/* Nav Items List */}
+          <div className="flex-1 overflow-y-auto px-2 py-3 space-y-4">
+            {navSections.map((section, sIdx) => (
+              <div key={sIdx}>
+                {!isSidebarCollapsed && (
+                  <div className="px-3 pb-1 text-[10px] font-bold text-sumi-500 uppercase tracking-wider">
+                    {section.title}
+                  </div>
+                )}
+                <div className="space-y-1">
+                  {section.items.map((item) => {
+                    const isActive = activeTab === item.id;
+                    if (isSidebarCollapsed) {
+                      return (
+                        <button
+                          key={item.id}
+                          type="button"
+                          onClick={() => setActiveTab(item.id)}
+                          title={`${item.label} (${item.jpName})`}
+                          className={`relative w-10 h-10 mx-auto rounded-lg flex items-center justify-center transition-all ${
+                            isActive
+                              ? 'bg-sumi-850 text-[var(--theme-accent,#38bdf8)] shadow-sm ring-1 ring-[var(--theme-accent,#38bdf8)]'
+                              : 'text-sumi-400 hover:text-sumi-100 hover:bg-sumi-850/60'
+                          }`}
+                        >
+                          {item.icon}
+                          {item.badge !== undefined && (
+                            <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full text-[9px] font-mono font-bold bg-rose-500 text-white flex items-center justify-center shadow-xs">
+                              {item.badge}
+                            </span>
+                          )}
+                        </button>
+                      );
+                    }
+
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => setActiveTab(item.id)}
+                        className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-all group ${
+                          isActive
+                            ? 'bg-sumi-850 text-sumi-100 font-semibold border-l-2 border-[var(--theme-accent,#38bdf8)] shadow-xs'
+                            : 'text-sumi-400 hover:text-sumi-200 hover:bg-sumi-850/50'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <span
+                            className={`shrink-0 transition-colors ${
+                              isActive ? 'text-[var(--theme-accent,#38bdf8)]' : 'text-sumi-400 group-hover:text-sumi-200'
+                            }`}
+                          >
+                            {item.icon}
+                          </span>
+                          <div className="text-left min-w-0">
+                            <div className="truncate text-xs leading-tight">{item.label}</div>
+                            <div className="truncate text-[10px] text-sumi-500 font-normal leading-tight mt-0.5">
+                              {item.jpName}
+                            </div>
+                          </div>
+                        </div>
+                        {item.badge !== undefined && (
+                          <span className="px-1.5 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-rose-500/20 text-rose-400 border border-rose-500/30">
+                            {item.badge}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Bottom Sidebar Dock Actions */}
+          {!isSidebarCollapsed ? (
+            <div className="p-3 border-t border-sumi-800/70 bg-sumi-950/40">
+              <div className="flex items-center justify-between text-xs text-sumi-400 mb-2">
+                <span className="font-mono text-[11px]">Kỳ thi 19/04/2026</span>
+                <span className="px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 text-[10px] font-mono">
+                  -29 ngày
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsSidebarCollapsed(true)}
+                className="w-full flex items-center justify-center gap-2 py-1.5 px-2 rounded-lg bg-sumi-850 hover:bg-sumi-800 border border-sumi-700/70 text-xs text-sumi-300 transition-colors"
+                title="Thu gọn sidebar (phím [)"
+              >
+                <PanelLeftClose size={14} />
+                <span>Thu gọn menu</span>
+                <kbd className="ml-auto text-[9px] font-mono px-1 rounded bg-sumi-900 border border-sumi-700 text-sumi-400">
+                  [
+                </kbd>
+              </button>
+            </div>
+          ) : (
+            <div className="p-2 border-t border-sumi-800/70 flex flex-col items-center">
+              <button
+                type="button"
+                onClick={() => setIsSidebarCollapsed(false)}
+                className="w-10 h-10 rounded-lg flex items-center justify-center text-sumi-400 hover:text-sumi-100 hover:bg-sumi-850 border border-transparent hover:border-sumi-700/80 transition-colors"
+                title="Mở rộng menu (phím [)"
+              >
+                <PanelLeft size={16} />
+              </button>
+            </div>
+          )}
+        </aside>
+
+        {/* Mobile Slide-Over Drawer */}
+        {isMobileNavOpen && (
+          <>
+            <div
+              className="fixed inset-0 bg-black/60 backdrop-blur-xs z-40 md:hidden animate-in fade-in duration-150"
+              onClick={() => setIsMobileNavOpen(false)}
+            />
+            <aside className="fixed top-14 bottom-0 left-0 w-72 bg-sumi-900 border-r border-sumi-800 z-50 overflow-y-auto p-3 flex flex-col md:hidden animate-in slide-in-from-left duration-200">
+              <div className="flex-1 space-y-4">
+                {navSections.map((section, sIdx) => (
+                  <div key={sIdx}>
+                    <div className="px-3 pb-1 text-[10px] font-bold text-sumi-500 uppercase tracking-wider">
+                      {section.title}
+                    </div>
+                    <div className="space-y-1">
+                      {section.items.map((item) => {
+                        const isActive = activeTab === item.id;
+                        return (
+                          <button
+                            key={item.id}
+                            type="button"
+                            onClick={() => {
+                              setActiveTab(item.id);
+                              setIsMobileNavOpen(false);
+                            }}
+                            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-all ${
+                              isActive
+                                ? 'bg-sumi-850 text-sumi-100 font-semibold border-l-2 border-[var(--theme-accent,#38bdf8)]'
+                                : 'text-sumi-400 hover:text-sumi-200 hover:bg-sumi-850/50'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <span
+                                className={`shrink-0 ${
+                                  isActive ? 'text-[var(--theme-accent,#38bdf8)]' : 'text-sumi-400'
+                                }`}
+                              >
+                                {item.icon}
+                              </span>
+                              <div className="text-left min-w-0">
+                                <div className="truncate text-xs leading-tight">{item.label}</div>
+                                <div className="truncate text-[10px] text-sumi-500 font-normal leading-tight mt-0.5">
+                                  {item.jpName}
+                                </div>
+                              </div>
+                            </div>
+                            {item.badge !== undefined && (
+                              <span className="px-1.5 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-rose-500/20 text-rose-400 border border-rose-500/30">
+                                {item.badge}
+                              </span>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </aside>
+          </>
         )}
 
-        {activeTab === 'planner' && (
-          <PlannerView schedule={schedule} onUpdateSchedule={setSchedule} />
-        )}
+        {/* Main Content Area */}
+        <main className="flex-1 min-w-0 p-4 sm:p-6 lg:p-8 flex flex-col overflow-y-auto">
+          <div className="max-w-7xl w-full mx-auto flex-1 flex flex-col">
+            {activeTab === 'dashboard' && (
+              <DashboardView
+                schedule={schedule}
+                books={books}
+                examScores={examScores}
+                onNavigateTab={setActiveTab}
+                onExportExcel={handleExportExcel}
+              />
+            )}
 
-        {activeTab === 'scanner' && (
-          <ScannerView
-            books={books}
-            apiKeys={apiKeys}
-            onUpdateApiKeys={setApiKeys}
-            onUpdateChapterScan={handleUpdateChapterScan}
-          />
-        )}
+            {activeTab === 'planner' && (
+              <PlannerView schedule={schedule} onUpdateSchedule={setSchedule} />
+            )}
 
-        {activeTab === 'curriculum' && (
-          <CurriculumView
-            books={books}
-            onUpdateChapter={handleUpdateChapter}
-            onNavigateScan={(_bookId, _chapterId) => {
-              setActiveTab('scanner');
-            }}
-          />
-        )}
+            {activeTab === 'scanner' && (
+              <ScannerView
+                books={books}
+                apiKeys={apiKeys}
+                onUpdateApiKeys={setApiKeys}
+                onUpdateChapterScan={handleUpdateChapterScan}
+              />
+            )}
 
-        {activeTab === 'algorithm-workshop' && (
-          <AlgorithmWorkshopView presets={INITIAL_ALGORITHM_PRESETS} />
-        )}
+            {activeTab === 'curriculum' && (
+              <CurriculumView
+                books={books}
+                onUpdateChapter={handleUpdateChapter}
+                onNavigateScan={(_bookId, _chapterId) => {
+                  setActiveTab('scanner');
+                }}
+              />
+            )}
 
-        {activeTab === 'security-workshop' && (
-          <SecurityWorkshopView caseStudies={INITIAL_SECURITY_CASES} />
-        )}
+            {activeTab === 'algorithm-workshop' && (
+              <AlgorithmWorkshopView presets={INITIAL_ALGORITHM_PRESETS} />
+            )}
 
-        {activeTab === 'exam-simulator' && (
-          <ExamSimulatorView
-            examScores={examScores}
-            onAddScoreRecord={(rec) => setExamScores([...examScores, rec])}
-          />
-        )}
+            {activeTab === 'security-workshop' && (
+              <SecurityWorkshopView caseStudies={INITIAL_SECURITY_CASES} />
+            )}
 
-        {activeTab === 'error-notebook' && (
-          <ErrorNotebookView
-            errorNotes={errorNotes}
-            onAddErrorNote={(note) => setErrorNotes([...errorNotes, note])}
-            onUpdateErrorNote={(id, updates) => {
-              setErrorNotes(errorNotes.map((n) => (n.id === id ? { ...n, ...updates } : n)));
-            }}
-          />
-        )}
+            {activeTab === 'exam-simulator' && (
+              <ExamSimulatorView
+                examScores={examScores}
+                onAddScoreRecord={(rec) => setExamScores([...examScores, rec])}
+              />
+            )}
 
-        {activeTab === 'vocab-hub' && (
-          <VocabHubView vocabList={vocabList} onToggleMastered={handleToggleVocabMastered} />
-        )}
+            {activeTab === 'error-notebook' && (
+              <ErrorNotebookView
+                errorNotes={errorNotes}
+                onAddErrorNote={(note) => setErrorNotes([...errorNotes, note])}
+                onUpdateErrorNote={(id, updates) => {
+                  setErrorNotes(errorNotes.map((n) => (n.id === id ? { ...n, ...updates } : n)));
+                }}
+              />
+            )}
 
-        {activeTab === 'pomodoro' && (
-          <PomodoroView
-            workMinutes={settings.pomodoroWorkMin}
-            breakMinutes={settings.pomodoroBreakMin}
-            onLogStudyMinutes={(min) => {
-              // Add actual hours to today's schedule
-              const todayStr = new Date().toISOString().split('T')[0];
-              const updated = schedule.map((s) =>
-                s.date === todayStr ? { ...s, actualHours: s.actualHours + min / 60 } : s
-              );
-              setSchedule(updated);
-            }}
-          />
-        )}
+            {activeTab === 'vocab-hub' && (
+              <VocabHubView vocabList={vocabList} onToggleMastered={handleToggleVocabMastered} />
+            )}
 
-        {activeTab === 'survival-guide' && <SurvivalGuideView />}
+            {activeTab === 'pomodoro' && (
+              <PomodoroView
+                workMinutes={settings.pomodoroWorkMin}
+                breakMinutes={settings.pomodoroBreakMin}
+                onLogStudyMinutes={(min) => {
+                  // Add actual hours to today's schedule
+                  const todayStr = new Date().toISOString().split('T')[0];
+                  const updated = schedule.map((s) =>
+                    s.date === todayStr ? { ...s, actualHours: s.actualHours + min / 60 } : s
+                  );
+                  setSchedule(updated);
+                }}
+              />
+            )}
 
-        {activeTab === 'settings' && (
-          <SettingsView
-            apiKeys={apiKeys}
-            settings={settings}
-            onUpdateApiKeys={setApiKeys}
-            onUpdateSettings={setSettings}
-            onExportExcel={handleExportExcel}
-            onExportJson={handleExportJson}
-            onImportJson={handleImportJson}
-          />
-        )}
-      </main>
+            {activeTab === 'survival-guide' && <SurvivalGuideView />}
 
-      {/* Footer */}
-      <footer className="border-t border-sumi-800 py-4 px-6 text-center text-xs text-sumi-500 font-mono">
-        FE Study Hub © 2026 | Built for Fundamental IT Engineers in Japan | Shortcuts: [D] Dashboard, [S] Scan, [T] Trace, [P] Pomodoro
-      </footer>
+            {activeTab === 'settings' && (
+              <SettingsView
+                apiKeys={apiKeys}
+                settings={settings}
+                onUpdateApiKeys={setApiKeys}
+                onUpdateSettings={setSettings}
+                onExportExcel={handleExportExcel}
+                onExportJson={handleExportJson}
+                onImportJson={handleImportJson}
+              />
+            )}
+          </div>
+
+          {/* Footer */}
+          <footer className="mt-12 border-t border-sumi-800/70 pt-4 pb-2 text-center text-xs text-sumi-500 font-mono">
+            FE Study Hub © 2026 | Built for Fundamental IT Engineers in Japan | Shortcuts: [D] Dashboard, [S] Scan, [T] Trace, [P] Pomodoro, [[] Thu gọn Sidebar
+          </footer>
+        </main>
+      </div>
     </div>
   );
 };

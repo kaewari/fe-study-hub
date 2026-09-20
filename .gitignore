@@ -19,3 +19,4 @@ scans/*
 Thumbs.db
 *.swp
 *.log
+.vercel
