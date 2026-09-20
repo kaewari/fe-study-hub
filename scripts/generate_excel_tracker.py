@@ -10,10 +10,10 @@ import openpyxl
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
 
-SCRATCH_DIR = Path("/Users/hoangson/.gemini/antigravity/scratch")
-OUT_XLSX = SCRATCH_DIR / "FE_Exam_Study_Tracker.xlsx"
+BASE_DIR = Path(__file__).resolve().parent.parent
+OUT_XLSX = BASE_DIR / "FE_Exam_Study_Tracker.xlsx"
 DESKTOP_XLSX = Path("/Users/hoangson/Desktop/FE_Exam_Study_Tracker.xlsx")
-VOCAB_JSON = SCRATCH_DIR / "fe-study-hub/src/shared/constants/fe_vocab.json"
+VOCAB_JSON = BASE_DIR / "src/shared/constants/fe_vocab.json"
 
 wb = openpyxl.Workbook()
 # remove default sheet
