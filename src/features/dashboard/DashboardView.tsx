@@ -40,43 +40,109 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   return (
     <div className="space-y-6">
       {/* Top Welcome & Kickstart Banner */}
-      <div className="relative overflow-hidden bg-gradient-to-r from-sumi-900 via-sumi-850 to-sumi-900 border border-sumi-700/80 rounded-xl p-6 shadow-xl">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="space-y-1.5">
-            <div className="flex items-center gap-2">
-              <Badge variant="emerald">FE SYLLABUS VER 9.1</Badge>
-              <Badge variant="amber">KICKSTART WEEK 2026/09/21 - 09/27</Badge>
+      <div className="relative overflow-hidden bg-gradient-to-br from-sumi-900/95 via-sumi-850/90 to-sumi-900/95 border border-sumi-700/80 rounded-2xl p-6 sm:p-7 shadow-xl">
+        {/* Subtle decorative glow */}
+        <div
+          className="absolute -right-16 -top-16 w-64 h-64 rounded-full opacity-20 blur-3xl pointer-events-none"
+          style={{ background: 'var(--theme-accent, #38bdf8)' }}
+        />
+
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-5">
+          <div className="space-y-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge variant="accent">FE SYLLABUS VER 9.1</Badge>
+              <Badge variant="emerald">CHUẨN IPA 600/1000 ĐIỂM</Badge>
               <span className="text-xs font-mono text-sumi-400">Target: 135 Hours</span>
             </div>
-            <h1 className="text-xl md:text-2xl font-bold tracking-tight text-sumi-100 flex items-center gap-2">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-sumi-100 flex items-center gap-2.5">
               基本情報技術者試験 (FE) 統合ダッシュボード
             </h1>
-            <p className="text-xs text-sumi-400 max-w-2xl">
-              Chiến lược song song: かやのき (Lý thuyết) + 福嶋 (Thuật toán B) + パーフェクトラーニング (Luyện đề). 
-              Nghỉ trọn vẹn tuần này (21-27/09) để bứt tốc 2.5 - 3h/ngày!
+            <p className="text-xs sm:text-sm text-sumi-300 max-w-2xl leading-relaxed">
+              Chiến lược học song song: <strong className="text-sumi-100 font-medium">かやのき</strong> (Lý thuyết A) + <strong className="text-sumi-100 font-medium">福嶋</strong> (Mã giả B) + <strong className="text-sumi-100 font-medium">パーフェクトラーニング</strong> (Luyện đề).
+              Tận dụng tuần nghỉ 21-27/09 để bứt tốc 2.5 - 3h/ngày!
             </p>
+            <div className="pt-1 flex items-center gap-2 text-xs font-mono text-sumi-400">
+              <span className="text-[var(--theme-accent,#38bdf8)]">「千里の行も足下に始まる」</span>
+              <span>• Hành trình ngàn dặm bắt đầu từ một bước chân.</span>
+            </div>
           </div>
-          <div className="flex items-center gap-3 shrink-0">
+
+          <div className="flex flex-wrap items-center gap-2.5 shrink-0 pt-2 lg:pt-0">
             <Button
               variant="outline"
               size="sm"
-              icon={<FileSpreadsheet size={16} className="text-emerald-400" />}
+              icon={<FileSpreadsheet size={15} className="text-emerald-500" />}
               onClick={onExportExcel}
               className="text-xs"
             >
               Xuất File Excel (.xlsx)
             </Button>
             <Button
-              variant="primary"
+              variant="gradient"
               size="sm"
-              icon={<Sparkles size={16} />}
+              icon={<Sparkles size={15} />}
               onClick={() => onNavigateTab('scanner')}
-              className="text-xs"
+              className="text-xs shadow-md"
             >
-              Scan & Gemini OCR
+              Scan Sách & OCR AI
             </Button>
           </div>
         </div>
+      </div>
+
+      {/* Quick Jump Action Dock */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <button
+          type="button"
+          onClick={() => onNavigateTab('algorithm-workshop')}
+          className="p-3.5 rounded-xl bg-sumi-900/80 hover:bg-sumi-850 border border-sumi-800 hover:border-sumi-700 transition-all text-left group shadow-xs cursor-pointer active:scale-97"
+        >
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-base">💻</span>
+            <span className="text-[10px] font-mono text-sumi-400 group-hover:text-[var(--theme-accent,#38bdf8)] transition-colors">Môn B →</span>
+          </div>
+          <span className="text-xs font-semibold text-sumi-100 block">擬似言語 B</span>
+          <span className="text-[10px] text-sumi-400 block truncate">Mã giả & Bảng Trace</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => onNavigateTab('security-workshop')}
+          className="p-3.5 rounded-xl bg-sumi-900/80 hover:bg-sumi-850 border border-sumi-800 hover:border-sumi-700 transition-all text-left group shadow-xs cursor-pointer active:scale-97"
+        >
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-base">🛡️</span>
+            <span className="text-[10px] font-mono text-sumi-400 group-hover:text-[var(--theme-accent,#38bdf8)] transition-colors">Môn B →</span>
+          </div>
+          <span className="text-xs font-semibold text-sumi-100 block">セキュリティ</span>
+          <span className="text-[10px] text-sumi-400 block truncate">4 Case Bảo mật thực tế</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => onNavigateTab('vocab-hub')}
+          className="p-3.5 rounded-xl bg-sumi-900/80 hover:bg-sumi-850 border border-sumi-800 hover:border-sumi-700 transition-all text-left group shadow-xs cursor-pointer active:scale-97"
+        >
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-base">📖</span>
+            <span className="text-[10px] font-mono text-sumi-400 group-hover:text-[var(--theme-accent,#38bdf8)] transition-colors">280+ Từ →</span>
+          </div>
+          <span className="text-xs font-semibold text-sumi-100 block">Mazii 用語集</span>
+          <span className="text-[10px] text-sumi-400 block truncate">Flashcard Từ vựng IT</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => onNavigateTab('pomodoro')}
+          className="p-3.5 rounded-xl bg-sumi-900/80 hover:bg-sumi-850 border border-sumi-800 hover:border-sumi-700 transition-all text-left group shadow-xs cursor-pointer active:scale-97"
+        >
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-base">🍅</span>
+            <span className="text-[10px] font-mono text-sumi-400 group-hover:text-[var(--theme-accent,#38bdf8)] transition-colors">Focus →</span>
+          </div>
+          <span className="text-xs font-semibold text-sumi-100 block">Pomodoro Focus</span>
+          <span className="text-[10px] text-sumi-400 block truncate">Đếm giờ 25m & Tự log</span>
+        </button>
       </div>
 
       {/* Bento Grid Row 1: KPI Cards */}
@@ -285,15 +351,15 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           badge={<Badge variant="amber"><Calendar size={12} /> Holidays</Badge>}
         >
           <div className="space-y-2.5 mt-2 text-xs">
-            <div className="flex items-center justify-between p-2.5 bg-amber-950/20 border border-amber-800/50 rounded">
+            <div className="flex items-center justify-between p-2.5 bg-amber-500/10 border border-amber-500/30 rounded-lg">
               <div>
-                <span className="font-semibold text-amber-300">2026/09/21 - 09/27 (Tuần này)</span>
+                <span className="font-semibold text-amber-600 dark:text-amber-300">2026/09/21 - 09/27 (Tuần này)</span>
                 <p className="text-[11px] text-sumi-400">★ Tuần nghỉ trọn vẹn (Kickstart 7 ngày liên tục)</p>
               </div>
-              <span className="font-mono text-amber-400 font-bold">2.5 - 3h/ngày</span>
+              <span className="font-mono text-amber-600 dark:text-amber-400 font-bold">2.5 - 3h/ngày</span>
             </div>
 
-            <div className="flex items-center justify-between p-2 bg-sumi-850 border border-sumi-800 rounded">
+            <div className="flex items-center justify-between p-2 bg-sumi-850 border border-sumi-800 rounded-lg">
               <div>
                 <span className="font-medium text-sumi-200">2026/10/12: スポーツの日 (Sports Day)</span>
                 <p className="text-[10px] text-sumi-400">Nghỉ 1 ngày thứ Hai</p>
@@ -301,7 +367,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               <span className="font-mono text-sumi-300">2.5h</span>
             </div>
 
-            <div className="flex items-center justify-between p-2 bg-sumi-850 border border-sumi-800 rounded">
+            <div className="flex items-center justify-between p-2 bg-sumi-850 border border-sumi-800 rounded-lg">
               <div>
                 <span className="font-medium text-sumi-200">2026/11/03: 文化の日 (Culture Day)</span>
                 <p className="text-[10px] text-sumi-400">Nghỉ 1 ngày thứ Ba</p>
@@ -309,12 +375,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               <span className="font-mono text-sumi-300">2.5h</span>
             </div>
 
-            <div className="flex items-center justify-between p-2.5 bg-blue-950/20 border border-blue-800/50 rounded">
+            <div className="flex items-center justify-between p-2.5 bg-blue-500/10 border border-blue-500/30 rounded-lg">
               <div>
-                <span className="font-semibold text-blue-300">2026/12/28 - 2027/01/03: 年末年始 (Nghỉ Tết)</span>
+                <span className="font-semibold text-blue-600 dark:text-blue-300">2026/12/28 - 2027/01/03: 年末年始 (Nghỉ Tết)</span>
                 <p className="text-[11px] text-sumi-400">Kỳ nghỉ Tết Dương lịch 7 ngày liên tục</p>
               </div>
-              <span className="font-mono text-blue-400 font-bold">3.5 - 4h/ngày</span>
+              <span className="font-mono text-blue-600 dark:text-blue-400 font-bold">3.5 - 4h/ngày</span>
             </div>
           </div>
         </BentoCard>

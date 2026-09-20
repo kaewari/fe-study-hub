@@ -160,9 +160,13 @@ export interface ApiKeyConnection {
 export type AppTheme =
   | 'sumi'
   | 'tokyo-night'
-  | 'catppuccin'
-  | 'nord'
+  | 'cyberpunk'
   | 'dracula'
+  | 'catppuccin'
+  | 'sakura'
+  | 'nord-light'
+  | 'matcha'
+  | 'nord'
   | 'rose-pine'
   | 'github-dark'
   | 'one-dark';

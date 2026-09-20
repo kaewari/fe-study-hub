@@ -36,6 +36,8 @@ import { SettingsView } from './features/settings/SettingsView';
 import { PinLockScreen } from './features/settings/PinLockScreen';
 
 import { exportStudyDataToExcel } from './shared/services/excelExportService';
+import { THEMES_LIST } from './shared/constants/themes';
+import { AppTheme } from './shared/types';
 import {
   LayoutDashboard,
   Calendar,
@@ -51,11 +53,17 @@ import {
   Settings,
   Lock,
   Flame,
+  Palette,
+  Sun,
+  Moon,
+  Check,
+  ChevronDown,
 } from 'lucide-react';
 
 export const App: React.FC = () => {
   // Navigation
   const [activeTab, setActiveTab] = useState<string>('dashboard');
+  const [isThemeMenuOpen, setIsThemeMenuOpen] = useState<boolean>(false);
 
   // Persistence State
   const [settings, setSettings] = useState<UserSettings>(() => {
@@ -106,11 +114,33 @@ export const App: React.FC = () => {
     localStorage.setItem('fe_user_settings', JSON.stringify(settings));
   }, [settings]);
 
-  // Apply Active Theme to Root DOM
+  // Apply Active Theme to Root DOM and toggle dark/light mode class
   useEffect(() => {
-    const theme = settings.theme || 'sumi';
-    document.documentElement.setAttribute('data-theme', theme);
+    const themeId = settings.theme || 'sumi';
+    document.documentElement.setAttribute('data-theme', themeId);
+    const currentTheme = THEMES_LIST.find((t) => t.id === themeId);
+    const isLight = currentTheme?.mode === 'light';
+    if (isLight) {
+      document.documentElement.classList.remove('dark');
+      document.documentElement.classList.add('light');
+    } else {
+      document.documentElement.classList.remove('light');
+      document.documentElement.classList.add('dark');
+    }
   }, [settings.theme]);
+
+  // Quick Toggle between Dark and Light
+  const handleToggleLightDark = () => {
+    const currentTheme = THEMES_LIST.find((t) => t.id === (settings.theme || 'sumi'));
+    const isLight = currentTheme?.mode === 'light';
+    const nextThemeId: AppTheme = isLight ? 'sumi' : 'sakura';
+    setSettings((prev) => ({ ...prev, theme: nextThemeId }));
+  };
+
+  const handleSelectTheme = (newTheme: AppTheme) => {
+    setSettings((prev) => ({ ...prev, theme: newTheme }));
+    setIsThemeMenuOpen(false);
+  };
 
   useEffect(() => {
     localStorage.setItem('fe_api_keys', JSON.stringify(apiKeys));
@@ -233,27 +263,138 @@ export const App: React.FC = () => {
       )}
 
       {/* Top Navbar */}
-      <header className="sticky top-0 z-40 bg-sumi-950/90 backdrop-blur-md border-b border-sumi-800 shrink-0">
-        <div className="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between gap-4">
+      <header className="sticky top-0 z-40 bg-sumi-950/85 backdrop-blur-xl border-b border-sumi-800/80 shrink-0 transition-colors duration-200">
+        <div className="max-w-7xl mx-auto px-4 h-15 flex items-center justify-between gap-4">
           {/* Logo & Brand */}
-          <div className="flex items-center gap-2.5 cursor-pointer" onClick={() => setActiveTab('dashboard')}>
-            <div className="w-7 h-7 rounded bg-sumi-850 border border-sumi-700 flex items-center justify-center font-bold text-emerald-400 font-mono text-xs">
-              基
+          <div className="flex items-center gap-3 cursor-pointer select-none" onClick={() => setActiveTab('dashboard')}>
+            <div className="w-8 h-8 rounded-lg bg-sumi-850 border border-sumi-700/90 flex items-center justify-center font-bold text-emerald-400 font-mono text-sm shadow-sm relative overflow-hidden group">
+              <span className="relative z-10">基</span>
+              <div className="absolute inset-0 bg-emerald-500/10 opacity-0 group-hover:opacity-100 transition-opacity" />
             </div>
             <div>
-              <span className="font-bold text-sm tracking-tight text-sumi-100 flex items-center gap-1.5">
-                FE STUDY HUB <span className="text-[10px] text-sumi-400 font-normal">v1.0</span>
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="font-bold text-sm tracking-tight text-sumi-100 flex items-center gap-1.5">
+                  FE STUDY HUB <span className="text-[10px] px-1.5 py-0.2 rounded bg-sumi-850 border border-sumi-700/80 text-sumi-400 font-normal">v1.0</span>
+                </span>
+                <span className="hidden md:inline-flex items-center gap-1 text-[11px] font-mono px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/25">
+                  ⏳ 19/04/2026 (Còn 29 ngày)
+                </span>
+              </div>
               <span className="text-[10px] text-sumi-400 block font-mono">基本情報技術者試験 (Syllabus 9.1)</span>
             </div>
           </div>
 
-          {/* Quick Metrics & Lock */}
-          <div className="flex items-center gap-3">
-            <div className="hidden sm:flex items-center gap-1 text-xs font-mono text-amber-400 bg-sumi-900 border border-sumi-800 px-2.5 py-1 rounded">
-              <Flame size={14} />
+          {/* Quick Actions, Theme Switcher & Lock */}
+          <div className="flex items-center gap-2 sm:gap-3">
+            {/* Streak Badge */}
+            <div className="hidden sm:flex items-center gap-1 text-xs font-mono text-amber-400 bg-sumi-850/90 border border-sumi-800 px-2.5 py-1.5 rounded-lg shadow-sm">
+              <Flame size={14} className="text-amber-400 animate-pulse" />
               <span>{settings.streakDays} Day Streak</span>
             </div>
+
+            {/* Quick 1-Click Light/Dark Toggle */}
+            <button
+              type="button"
+              onClick={handleToggleLightDark}
+              className="p-1.5 sm:px-2.5 sm:py-1.5 text-xs font-medium rounded-lg bg-sumi-850 hover:bg-sumi-800 border border-sumi-700/80 text-sumi-200 flex items-center gap-1.5 transition-all active:scale-95 shadow-sm"
+              title="Chuyển nhanh Sáng / Tối (1 click)"
+            >
+              {THEMES_LIST.find((t) => t.id === (settings.theme || 'sumi'))?.mode === 'light' ? (
+                <>
+                  <Sun size={15} className="text-amber-500" />
+                  <span className="hidden sm:inline">Chế độ Sáng</span>
+                </>
+              ) : (
+                <>
+                  <Moon size={15} className="text-blue-400" />
+                  <span className="hidden sm:inline">Chế độ Tối</span>
+                </>
+              )}
+            </button>
+
+            {/* Quick Theme Switcher Popover Dropdown */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setIsThemeMenuOpen(!isThemeMenuOpen)}
+                className="px-2.5 py-1.5 text-xs font-medium rounded-lg bg-sumi-850 hover:bg-sumi-800 border border-sumi-700/80 text-sumi-100 flex items-center gap-2 transition-all active:scale-95 shadow-sm"
+                title="Chọn giao diện & màu sắc"
+              >
+                <Palette size={14} className="text-[var(--theme-accent,#38bdf8)]" />
+                <span className="hidden md:inline max-w-[90px] truncate">
+                  {THEMES_LIST.find((t) => t.id === (settings.theme || 'sumi'))?.name || 'Theme'}
+                </span>
+                <div
+                  className="w-3 h-3 rounded-full border border-white/20 shrink-0 shadow-xs"
+                  style={{ backgroundColor: THEMES_LIST.find((t) => t.id === (settings.theme || 'sumi'))?.preview.accent || '#38bdf8' }}
+                />
+                <ChevronDown size={12} className={`text-sumi-400 transition-transform duration-200 ${isThemeMenuOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              {/* Theme Dropdown Menu */}
+              {isThemeMenuOpen && (
+                <>
+                  <div
+                    className="fixed inset-0 z-40"
+                    onClick={() => setIsThemeMenuOpen(false)}
+                  />
+                  <div className="absolute right-0 mt-2 w-80 sm:w-96 rounded-xl bg-sumi-900 border border-sumi-700 shadow-2xl p-4 z-50 animate-in fade-in zoom-in-95 duration-150">
+                    <div className="flex items-center justify-between pb-3 border-b border-sumi-800">
+                      <div>
+                        <h4 className="text-xs font-bold text-sumi-100 uppercase tracking-wider flex items-center gap-1.5">
+                          <Palette size={13} className="text-[var(--theme-accent,#38bdf8)]" />
+                          Giao Diện (Theme Engine)
+                        </h4>
+                        <p className="text-[10px] text-sumi-400 mt-0.5">8 phong cách thẩm mỹ chuẩn quốc tế</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleToggleLightDark}
+                        className="text-[11px] px-2 py-1 rounded bg-sumi-850 hover:bg-sumi-800 border border-sumi-700 text-sumi-200 flex items-center gap-1 transition-colors"
+                      >
+                        {THEMES_LIST.find((t) => t.id === (settings.theme || 'sumi'))?.mode === 'light' ? '🌙 Sang Tối' : '☀️ Sang Sáng'}
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 mt-3 max-h-72 overflow-y-auto pr-1">
+                      {THEMES_LIST.map((th) => {
+                        const isSelected = (settings.theme || 'sumi') === th.id;
+                        return (
+                          <button
+                            key={th.id}
+                            type="button"
+                            onClick={() => handleSelectTheme(th.id)}
+                            className={`p-2.5 rounded-lg border text-left transition-all relative flex flex-col justify-between ${
+                              isSelected
+                                ? 'border-[var(--theme-accent,#38bdf8)] bg-sumi-850 ring-1 ring-[var(--theme-accent,#38bdf8)]'
+                                : 'border-sumi-800 bg-sumi-950/60 hover:bg-sumi-850 hover:border-sumi-700'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between gap-1 mb-1">
+                              <span className="font-semibold text-xs text-sumi-100 truncate">{th.name}</span>
+                              {isSelected && (
+                                <Check size={12} className="text-[var(--theme-accent,#38bdf8)] shrink-0" />
+                              )}
+                            </div>
+                            <span className="text-[10px] text-sumi-400 block truncate mb-2">{th.jpName}</span>
+
+                            {/* Color preview swatch bar */}
+                            <div className="flex items-center gap-1 p-1 rounded bg-sumi-950 border border-sumi-800/80 shrink-0">
+                              <div className="w-2.5 h-2.5 rounded-xs border border-white/20" style={{ backgroundColor: th.preview.canvas }} title="Canvas" />
+                              <div className="w-2.5 h-2.5 rounded-xs border border-white/20" style={{ backgroundColor: th.preview.surface }} title="Surface" />
+                              <div className="w-2.5 h-2.5 rounded-xs border border-white/20" style={{ backgroundColor: th.preview.accent }} title="Accent" />
+                              <span className="text-[8px] font-mono text-sumi-400 ml-auto uppercase">{th.mode}</span>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* PIN Lock Button */}
             {settings.isPinEnabled && (
               <button
                 type="button"
@@ -261,30 +402,30 @@ export const App: React.FC = () => {
                   localStorage.removeItem('fe_pin_unlocked_until');
                   setIsLocked(true);
                 }}
-                className="p-1.5 text-sumi-400 hover:text-sumi-100 rounded hover:bg-sumi-900 transition-colors"
+                className="p-1.5 text-sumi-400 hover:text-sumi-100 rounded-lg hover:bg-sumi-850 transition-colors border border-transparent hover:border-sumi-700/80"
                 title="Khóa màn hình"
               >
-                <Lock size={16} />
+                <Lock size={15} />
               </button>
             )}
           </div>
         </div>
 
-        {/* Horizontal Navigation Tabs */}
-        <div className="max-w-7xl mx-auto px-4 overflow-x-auto scrollbar-none flex items-center gap-1 border-t border-sumi-800/40">
+        {/* Modern Segmented Navigation Tabs */}
+        <div className="max-w-7xl mx-auto px-4 overflow-x-auto scrollbar-none py-1.5 flex items-center gap-1.5 border-t border-sumi-800/50">
           {tabs.map((tab) => {
             const isActive = activeTab === tab.id;
             return (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium whitespace-nowrap border-b-2 transition-all ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium whitespace-nowrap rounded-lg transition-all duration-150 ${
                   isActive
-                    ? 'border-blue-500 text-blue-400 bg-sumi-900/50'
-                    : 'border-transparent text-sumi-400 hover:text-sumi-200 hover:border-sumi-700'
+                    ? 'bg-sumi-850 text-sumi-100 font-semibold border border-sumi-700 shadow-sm theme-accent-border'
+                    : 'text-sumi-400 hover:text-sumi-200 hover:bg-sumi-850/60 border border-transparent'
                 }`}
               >
-                {tab.icon}
+                <span className={isActive ? 'text-[var(--theme-accent,#38bdf8)]' : ''}>{tab.icon}</span>
                 <span>{tab.label}</span>
               </button>
             );

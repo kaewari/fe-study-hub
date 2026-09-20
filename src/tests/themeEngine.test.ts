@@ -8,17 +8,23 @@ describe('Theme Engine & Palette Configuration', () => {
     expect(THEMES_LIST).toHaveLength(8);
   });
 
-  it('should include all standard requested developer themes', () => {
+  it('should include 5 high-contrast dark themes and 3 clean light themes', () => {
+    const darkThemes = THEMES_LIST.filter((t) => t.mode === 'dark');
+    const lightThemes = THEMES_LIST.filter((t) => t.mode === 'light');
+
+    expect(darkThemes).toHaveLength(5);
+    expect(lightThemes).toHaveLength(3);
+
     const themeIds = THEMES_LIST.map((t) => t.id);
     const expectedThemes: AppTheme[] = [
       'sumi',
       'tokyo-night',
-      'catppuccin',
-      'nord',
+      'cyberpunk',
       'dracula',
-      'rose-pine',
-      'github-dark',
-      'one-dark',
+      'catppuccin',
+      'sakura',
+      'nord-light',
+      'matcha',
     ];
 
     expectedThemes.forEach((theme) => {
@@ -35,6 +41,7 @@ describe('Theme Engine & Palette Configuration', () => {
       expect(theme.jpName).toBeTruthy();
       expect(theme.description).toBeTruthy();
       expect(theme.category).toBeTruthy();
+      expect(['dark', 'light']).toContain(theme.mode);
 
       // Check preview swatches
       expect(theme.preview.canvas).toMatch(hexColorRegex);
@@ -42,6 +49,25 @@ describe('Theme Engine & Palette Configuration', () => {
       expect(theme.preview.border).toMatch(hexColorRegex);
       expect(theme.preview.accent).toMatch(hexColorRegex);
       expect(theme.preview.text).toMatch(hexColorRegex);
+    });
+  });
+
+  it('should guarantee distinct canvas lightness between dark and light themes', () => {
+    const lightThemes = THEMES_LIST.filter((t) => t.mode === 'light');
+    const darkThemes = THEMES_LIST.filter((t) => t.mode === 'dark');
+
+    // Light themes should have high RGB canvas values (e.g. starting with #f or #e)
+    lightThemes.forEach((t) => {
+      const firstHex = t.preview.canvas.slice(1, 3);
+      const r = parseInt(firstHex, 16);
+      expect(r).toBeGreaterThan(200); // Clearly a light canvas
+    });
+
+    // Dark themes should have low RGB canvas values
+    darkThemes.forEach((t) => {
+      const firstHex = t.preview.canvas.slice(1, 3);
+      const r = parseInt(firstHex, 16);
+      expect(r).toBeLessThan(50); // Clearly a dark canvas
     });
   });
 

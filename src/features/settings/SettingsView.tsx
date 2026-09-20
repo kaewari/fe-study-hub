@@ -72,53 +72,109 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       {/* Theme Selector Bento Card */}
       <BentoCard
         title="🎨 Giao Diện & Màu Sắc Hệ Thống (Theme Engine)"
-        subtitle="Chọn theme màu được cộng đồng lập trình viên & kỹ sư quốc tế ưa chuộng nhất"
+        subtitle="Hệ thống 8 theme màu cao cấp (5 Theme Tối & 3 Theme Sáng) tối ưu cho học tập và chống mỏi mắt"
         badge={
-          <Badge variant="blue">
+          <Badge variant="accent">
             <Palette size={12} /> {THEMES_LIST.find((t) => t.id === (settings.theme || 'sumi'))?.name || 'Sumi & Slate'}
           </Badge>
         }
       >
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-2">
-          {THEMES_LIST.map((th) => {
-            const isSelected = (settings.theme || 'sumi') === th.id;
-            return (
-              <button
-                key={th.id}
-                type="button"
-                onClick={() => onUpdateSettings({ ...settings, theme: th.id })}
-                className={`p-3 rounded-lg border text-left transition-all relative overflow-hidden flex flex-col justify-between ${
-                  isSelected
-                    ? 'border-blue-500 bg-sumi-850 ring-1 ring-blue-500 shadow-md'
-                    : 'border-sumi-800 bg-sumi-900/60 hover:bg-sumi-850 hover:border-sumi-700'
-                }`}
-              >
-                <div>
-                  <div className="flex items-center justify-between gap-1 mb-1">
-                    <span className="font-semibold text-xs text-sumi-100">{th.name}</span>
-                    {isSelected && (
-                      <span className="w-4 h-4 rounded-full bg-blue-500 text-white flex items-center justify-center shrink-0">
-                        <Check size={10} />
-                      </span>
-                    )}
+        {/* Dark Themes Group */}
+        <div className="mt-2">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-xs font-bold text-sumi-200 tracking-wider uppercase flex items-center gap-1.5">
+              🌙 Chế Độ Tối (Dark Themes - Chống Mỏi Mắt)
+            </span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
+            {THEMES_LIST.filter((t) => t.mode === 'dark').map((th) => {
+              const isSelected = (settings.theme || 'sumi') === th.id;
+              return (
+                <button
+                  key={th.id}
+                  type="button"
+                  onClick={() => onUpdateSettings({ ...settings, theme: th.id })}
+                  className={`p-3 rounded-lg border text-left transition-all relative overflow-hidden flex flex-col justify-between ${
+                    isSelected
+                      ? 'border-[var(--theme-accent,#38bdf8)] bg-sumi-850 ring-1 ring-[var(--theme-accent,#38bdf8)] shadow-md'
+                      : 'border-sumi-800 bg-sumi-900/60 hover:bg-sumi-850 hover:border-sumi-700'
+                  }`}
+                >
+                  <div>
+                    <div className="flex items-center justify-between gap-1 mb-1">
+                      <span className="font-semibold text-xs text-sumi-100">{th.name}</span>
+                      {isSelected && (
+                        <span className="w-4 h-4 rounded-full bg-[var(--theme-accent,#38bdf8)] text-white flex items-center justify-center shrink-0 shadow-xs">
+                          <Check size={10} />
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-[10px] text-sumi-400 block mb-2">{th.jpName}</span>
+                    <p className="text-[11px] text-sumi-300 leading-tight mb-3 line-clamp-2">
+                      {th.description}
+                    </p>
                   </div>
-                  <span className="text-[10px] text-sumi-400 block mb-2">{th.jpName}</span>
-                  <p className="text-[11px] text-sumi-300 leading-tight mb-3">
-                    {th.description}
-                  </p>
-                </div>
 
-                {/* Palette Swatches */}
-                <div className="flex items-center gap-1.5 p-1.5 rounded bg-sumi-950 border border-sumi-800/80 shrink-0">
-                  <div className="w-3.5 h-3.5 rounded-sm border border-white/10 shrink-0" style={{ backgroundColor: th.preview.canvas }} title="Canvas" />
-                  <div className="w-3.5 h-3.5 rounded-sm border border-white/10 shrink-0" style={{ backgroundColor: th.preview.surface }} title="Surface" />
-                  <div className="w-3.5 h-3.5 rounded-sm border border-white/10 shrink-0" style={{ backgroundColor: th.preview.border }} title="Border" />
-                  <div className="w-3.5 h-3.5 rounded-sm border border-white/10 shrink-0" style={{ backgroundColor: th.preview.accent }} title="Accent" />
-                  <span className="text-[9px] font-mono text-sumi-400 ml-auto uppercase">{th.category}</span>
-                </div>
-              </button>
-            );
-          })}
+                  {/* Palette Swatches */}
+                  <div className="flex items-center gap-1.5 p-1.5 rounded bg-sumi-950 border border-sumi-800/80 shrink-0">
+                    <div className="w-3.5 h-3.5 rounded-xs border border-white/10 shrink-0" style={{ backgroundColor: th.preview.canvas }} title="Canvas" />
+                    <div className="w-3.5 h-3.5 rounded-xs border border-white/10 shrink-0" style={{ backgroundColor: th.preview.surface }} title="Surface" />
+                    <div className="w-3.5 h-3.5 rounded-xs border border-white/10 shrink-0" style={{ backgroundColor: th.preview.accent }} title="Accent" />
+                    <span className="text-[9px] font-mono text-sumi-400 ml-auto uppercase">{th.category}</span>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Light Themes Group */}
+        <div className="mt-5 pt-4 border-t border-sumi-800/60">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-xs font-bold text-sumi-200 tracking-wider uppercase flex items-center gap-1.5">
+              ☀️ Chế Độ Sáng (Light Themes - Sáng Thanh Khiết & Thanh Lịch)
+            </span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {THEMES_LIST.filter((t) => t.mode === 'light').map((th) => {
+              const isSelected = (settings.theme || 'sumi') === th.id;
+              return (
+                <button
+                  key={th.id}
+                  type="button"
+                  onClick={() => onUpdateSettings({ ...settings, theme: th.id })}
+                  className={`p-3 rounded-lg border text-left transition-all relative overflow-hidden flex flex-col justify-between ${
+                    isSelected
+                      ? 'border-[var(--theme-accent,#38bdf8)] bg-sumi-850 ring-1 ring-[var(--theme-accent,#38bdf8)] shadow-md'
+                      : 'border-sumi-800 bg-sumi-900/60 hover:bg-sumi-850 hover:border-sumi-700'
+                  }`}
+                >
+                  <div>
+                    <div className="flex items-center justify-between gap-1 mb-1">
+                      <span className="font-semibold text-xs text-sumi-100">{th.name}</span>
+                      {isSelected && (
+                        <span className="w-4 h-4 rounded-full bg-[var(--theme-accent,#38bdf8)] text-white flex items-center justify-center shrink-0 shadow-xs">
+                          <Check size={10} />
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-[10px] text-sumi-400 block mb-2">{th.jpName}</span>
+                    <p className="text-[11px] text-sumi-300 leading-tight mb-3">
+                      {th.description}
+                    </p>
+                  </div>
+
+                  {/* Palette Swatches */}
+                  <div className="flex items-center gap-1.5 p-1.5 rounded bg-sumi-950 border border-sumi-800/80 shrink-0">
+                    <div className="w-3.5 h-3.5 rounded-xs border border-white/10 shrink-0" style={{ backgroundColor: th.preview.canvas }} title="Canvas" />
+                    <div className="w-3.5 h-3.5 rounded-xs border border-white/10 shrink-0" style={{ backgroundColor: th.preview.surface }} title="Surface" />
+                    <div className="w-3.5 h-3.5 rounded-xs border border-white/10 shrink-0" style={{ backgroundColor: th.preview.accent }} title="Accent" />
+                    <span className="text-[9px] font-mono text-sumi-400 ml-auto uppercase">{th.category}</span>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
         </div>
       </BentoCard>
 

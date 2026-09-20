@@ -18,14 +18,20 @@ export const BentoCard: React.FC<BentoCardProps> = ({
   className = '',
 }) => {
   return (
-    <div className={`bg-sumi-900 border border-sumi-800 rounded-lg p-5 flex flex-col justify-between hover:border-sumi-700 transition-colors duration-150 ${className}`}>
+    <div
+      className={`bg-sumi-900/85 backdrop-blur-md border border-sumi-800/90 hover:border-sumi-700 rounded-xl p-5 md:p-6 flex flex-col justify-between shadow-sm hover:shadow-md hover:shadow-black/10 transition-all duration-200 ${className}`}
+    >
       {(title || action || badge) && (
         <div className="flex items-start justify-between gap-3 mb-4 pb-3 border-b border-sumi-800/60">
           <div>
-            {title && <h3 className="font-semibold text-sumi-100 text-sm tracking-wide flex items-center gap-2">{title}</h3>}
+            {title && (
+              <h3 className="font-semibold text-sumi-100 text-sm tracking-wide flex items-center gap-2">
+                {title}
+              </h3>
+            )}
             {subtitle && <p className="text-xs text-sumi-400 mt-0.5">{subtitle}</p>}
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             {badge}
             {action}
           </div>

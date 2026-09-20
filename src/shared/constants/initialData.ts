@@ -2,7 +2,7 @@ import { DailyScheduleItem, BookItem, ExamScoreRecord, ErrorNoteItem, AlgorithmP
 
 export const INITIAL_SETTINGS: UserSettings = {
   pin: '2026',
-  isPinEnabled: true,
+  isPinEnabled: false,
   activeModel: 'gemini-2.5-flash',
   autoRotateKeys: true,
   targetTotalHours: 135,
