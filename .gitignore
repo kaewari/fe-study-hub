@@ -1,0 +1,21 @@
+# Node modules & build
+node_modules/
+dist/
+.venv/
+__pycache__/
+*.pyc
+
+# Environment & local secrets
+.env.local
+.env.*.local
+.env
+
+# Scans cache & local binaries
+scans/*
+!scans/.gitkeep
+
+# IDE & OS files
+.DS_Store
+Thumbs.db
+*.swp
+*.log

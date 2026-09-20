@@ -1,0 +1,33 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-sumi-950 text-sumi-100 font-sans antialiased;
+  }
+}
+
+/* Tactile Japanese Engineering Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0b0d10;
+}
+::-webkit-scrollbar-thumb {
+  background: #222933;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #323d4d;
+}
+
+/* Subtle border glow utilities without purple AI slop */
+.border-tactile {
+  border: 1px solid #222933;
+}
+.border-tactile-focus {
+  border: 1px solid #3b82f6;
+}

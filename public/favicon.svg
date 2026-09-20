@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <rect width="32" height="32" rx="6" fill="#111419" stroke="#222933" stroke-width="1.5"/>
+  <rect x="5" y="5" width="22" height="22" rx="4" fill="#161b22" stroke="#323d4d" stroke-width="0.75"/>
+  <text x="16" y="21" font-family="-apple-system, system-ui, sans-serif" font-size="12" font-weight="bold" fill="#10b981" text-anchor="middle">基</text>
+</svg>
