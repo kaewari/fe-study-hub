@@ -58,6 +58,159 @@ const QUICK_PROMPTS = [
   },
 ];
 
+// Lightweight Markdown parser for AI Assistant messages (zero external dependencies)
+const FormattedMessage: React.FC<{ text: string }> = ({ text }) => {
+  const lines = text.split('\n');
+  const elements: React.ReactNode[] = [];
+  let inCodeBlock = false;
+  let codeBuffer: string[] = [];
+  let codeLang = '';
+
+  const renderInline = (str: string): React.ReactNode[] => {
+    const regex = /(\*\*.*?\*\*|`.*?`)/g;
+    const parts: React.ReactNode[] = [];
+    let lastIdx = 0;
+    let match: RegExpExecArray | null;
+
+    while ((match = regex.exec(str)) !== null) {
+      if (match.index > lastIdx) {
+        parts.push(str.slice(lastIdx, match.index));
+      }
+      const token = match[0];
+      if (token.startsWith('**') && token.endsWith('**')) {
+        parts.push(
+          <strong key={match.index} className="font-semibold text-sumi-100">
+            {token.slice(2, -2)}
+          </strong>
+        );
+      } else if (token.startsWith('`') && token.endsWith('`')) {
+        parts.push(
+          <code
+            key={match.index}
+            className="px-1.5 py-0.5 rounded bg-sumi-850 text-blue-300 font-mono text-[11px] border border-sumi-800 mx-0.5"
+          >
+            {token.slice(1, -1)}
+          </code>
+        );
+      }
+      lastIdx = regex.lastIndex;
+    }
+    if (lastIdx < str.length) {
+      parts.push(str.slice(lastIdx));
+    }
+    return parts;
+  };
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+
+    // Handle code blocks ```
+    if (line.trim().startsWith('```')) {
+      if (inCodeBlock) {
+        elements.push(
+          <div key={`code-${i}`} className="my-2 rounded-lg bg-sumi-950 border border-sumi-800 overflow-hidden">
+            {codeLang && (
+              <div className="px-3 py-1 bg-sumi-900 border-b border-sumi-800 text-[10px] font-mono text-sumi-400">
+                {codeLang}
+              </div>
+            )}
+            <pre className="p-3 overflow-x-auto text-[11px] font-mono text-sumi-200 scrollbar-thin">
+              <code>{codeBuffer.join('\n')}</code>
+            </pre>
+          </div>
+        );
+        codeBuffer = [];
+        inCodeBlock = false;
+        codeLang = '';
+      } else {
+        inCodeBlock = true;
+        codeLang = line.trim().slice(3).trim();
+      }
+      continue;
+    }
+
+    if (inCodeBlock) {
+      codeBuffer.push(line);
+      continue;
+    }
+
+    // Handle bullet items (*, -, •, or 1.)
+    const bulletMatch = line.match(/^(\s*)([*•-]|\d+\.)\s+(.*)$/);
+    if (bulletMatch) {
+      const indent = bulletMatch[1].length;
+      const isNested = indent >= 2;
+      const isOrdered = /^\d+\./.test(bulletMatch[2]);
+      const marker = bulletMatch[2];
+      const content = bulletMatch[3];
+
+      elements.push(
+        <div
+          key={`line-${i}`}
+          className={`flex items-start gap-2 my-1 text-xs leading-relaxed ${
+            isNested ? 'pl-5 text-sumi-300' : 'pl-1 text-sumi-200'
+          }`}
+        >
+          <span
+            className={`select-none shrink-0 font-mono ${
+              isOrdered
+                ? 'text-sumi-400 text-[11px]'
+                : isNested
+                ? 'text-sumi-500 text-[10px] mt-0.5'
+                : 'text-blue-400 text-xs mt-0.5'
+            }`}
+          >
+            {isOrdered ? marker : isNested ? '◦' : '•'}
+          </span>
+          <div className="flex-1 min-w-0">{renderInline(content)}</div>
+        </div>
+      );
+      continue;
+    }
+
+    // Handle Markdown Headers
+    const headerMatch = line.match(/^(#{1,4})\s+(.*)$/);
+    if (headerMatch) {
+      const level = headerMatch[1].length;
+      const headerText = headerMatch[2];
+      elements.push(
+        <div
+          key={`header-${i}`}
+          className={`font-bold text-sumi-100 ${
+            level <= 2 ? 'text-sm mt-3 mb-1.5' : 'text-xs mt-2.5 mb-1'
+          }`}
+        >
+          {renderInline(headerText)}
+        </div>
+      );
+      continue;
+    }
+
+    // Handle empty line (paragraph separator)
+    if (line.trim() === '') {
+      elements.push(<div key={`empty-${i}`} className="h-1.5" />);
+      continue;
+    }
+
+    // Regular paragraph line
+    elements.push(
+      <p key={`p-${i}`} className="my-1 leading-relaxed text-xs text-sumi-200">
+        {renderInline(line)}
+      </p>
+    );
+  }
+
+  // Handle unclosed code block
+  if (inCodeBlock && codeBuffer.length > 0) {
+    elements.push(
+      <pre key="code-unclosed" className="p-3 my-2 rounded bg-sumi-950 border border-sumi-800 overflow-x-auto text-[11px] font-mono text-sumi-200">
+        <code>{codeBuffer.join('\n')}</code>
+      </pre>
+    );
+  }
+
+  return <div className="space-y-0.5 font-sans">{elements}</div>;
+};
+
 export const AiStudyAssistant: React.FC<AiStudyAssistantProps> = ({
   apiKeys,
   onUpdateApiKeys,
@@ -346,8 +499,12 @@ Quy tắc trả lời:
                   <h3 className="text-xs font-bold text-sumi-100 truncate">
                     AI Tutor Trợ Giảng FE
                   </h3>
-                  <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shrink-0">
-                    Gemini 2.5
+                  <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shrink-0">
+                    {activeModel === 'gemini-3.8-flash'
+                      ? 'Gemini 3.8 Flash'
+                      : activeModel === 'gemini-3.6-flash'
+                      ? 'Gemini 3.6 Flash'
+                      : activeModel || 'Gemini 3.8 Flash'}
                   </span>
                 </div>
                 <div className="flex items-center gap-1.5 text-[10px] text-sumi-400 font-mono mt-0.5 truncate">
@@ -414,7 +571,11 @@ Quy tắc trả lời:
                       : 'bg-sumi-950 border border-sumi-800 text-sumi-200 rounded-bl-none shadow-sm'
                   }`}
                 >
-                  <div className="whitespace-pre-wrap font-sans">{msg.text}</div>
+                  {msg.sender === 'assistant' && !msg.isError ? (
+                    <FormattedMessage text={msg.text} />
+                  ) : (
+                    <div className="whitespace-pre-wrap font-sans">{msg.text}</div>
+                  )}
                   <div
                     className={`text-[9px] font-mono mt-1.5 flex justify-end ${
                       msg.sender === 'user' ? 'text-blue-200/70' : 'text-sumi-500'
