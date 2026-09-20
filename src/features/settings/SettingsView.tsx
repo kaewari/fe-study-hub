@@ -422,7 +422,9 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 onChange={(e) => setActiveModel(e.target.value)}
                 className="w-full bg-sumi-950 border border-sumi-700 text-sumi-100 rounded px-3 py-2 text-xs focus:outline-none focus:border-blue-500"
               >
-                <option value="gemini-2.5-flash">Gemini 3.8 Flash high (Siêu nhanh, OCR chuẩn tiếng Nhật)</option>
+                <option value="gemini-3.8-flash">Gemini 3.8 Flash (Khuyên dùng - Siêu nhanh, tiếng Nhật chuẩn)</option>
+                <option value="gemini-3.6-flash">Gemini 3.6 Flash</option>
+                <option value="gemini-flash-latest">Gemini Flash Latest</option>
                 <option value="gemini-2.5-pro">Gemini 2.5 Pro (Suy luận sâu thuật toán)</option>
               </select>
             </div>

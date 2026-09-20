@@ -259,15 +259,24 @@ export async function decryptApiKeys(
   if (!storedData) return fallback;
 
   try {
+    let parsed: ApiKeyConnection[] | null = null;
     if (isDataEncrypted(storedData)) {
       const decryptedJson = await decryptData(storedData);
-      const parsed = JSON.parse(decryptedJson);
-      return Array.isArray(parsed) ? parsed : fallback;
+      parsed = JSON.parse(decryptedJson);
+    } else {
+      parsed = JSON.parse(storedData);
     }
 
-    // Legacy plain-text JSON fallback (for auto-migration)
-    const parsed = JSON.parse(storedData);
-    return Array.isArray(parsed) ? parsed : fallback;
+    if (!Array.isArray(parsed) || parsed.length === 0) return fallback;
+
+    // Backfill any empty/missing keys from fallback (e.g. newly provisioned env keys)
+    return parsed.map((item, idx) => {
+      const fallbackItem = fallback.find((f) => f.id === item.id) || fallback[idx];
+      if ((!item.key || item.key.trim() === '') && fallbackItem && fallbackItem.key) {
+        return { ...item, key: fallbackItem.key, name: item.name || fallbackItem.name };
+      }
+      return item;
+    });
   } catch (err) {
     console.warn('Failed to decrypt or parse API keys, using fallback:', err);
     return fallback;

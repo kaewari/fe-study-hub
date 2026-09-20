@@ -28,6 +28,7 @@ interface ChatMessage {
 interface AiStudyAssistantProps {
   apiKeys: ApiKeyConnection[];
   onUpdateApiKeys: (updated: ApiKeyConnection[]) => void;
+  activeModel?: string;
   externalQuery?: string | null;
   onClearExternalQuery?: () => void;
   isOpen?: boolean;
@@ -60,6 +61,7 @@ const QUICK_PROMPTS = [
 export const AiStudyAssistant: React.FC<AiStudyAssistantProps> = ({
   apiKeys,
   onUpdateApiKeys,
+  activeModel,
   externalQuery,
   onClearExternalQuery,
   isOpen: controlledIsOpen,
@@ -165,8 +167,9 @@ Quy tắc trả lời:
       }
 
       try {
-        const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${candidateKey.key}`;
-        const res = await fetch(endpoint, {
+        const preferredModel = activeModel || import.meta.env.VITE_GEMINI_MODEL || 'gemini-3.8-flash';
+        let endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${preferredModel}:generateContent?key=${candidateKey.key}`;
+        let res = await fetch(endpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -185,6 +188,29 @@ Quy tắc trả lời:
           }),
         });
 
+        // If the configured model returns 404 or deprecated, fallback to gemini-3.8-flash or gemini-flash-latest
+        if (!res.ok && res.status === 404 && preferredModel !== 'gemini-3.8-flash') {
+          endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${candidateKey.key}`;
+          res = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [
+                {
+                  parts: [
+                    { text: systemPrompt },
+                    { text: `Học viên hỏi: "${query}"` },
+                  ],
+                },
+              ],
+              generationConfig: {
+                temperature: 0.3,
+                maxOutputTokens: 2048,
+              },
+            }),
+          });
+        }
+
         if (!res.ok) {
           const errData = await res.json().catch(() => ({}));
           const errMsg = errData?.error?.message || `HTTP ${res.status}`;
@@ -201,6 +227,15 @@ Quy tắc trả lời:
             attempts++;
             continue;
           }
+
+          if (res.status === 503 || errMsg.includes('503') || errMsg.includes('high demand')) {
+            // High demand spike, rotate to next key immediately
+            setKeyAlert(`Model đang tải cao trên key ${candidateKey.name} (503). Chuyển key tiếp theo...`);
+            keyIdx = (keyIdx + 1) % Math.max(apiKeys.length, 1);
+            attempts++;
+            continue;
+          }
+
           throw new Error(errMsg);
         }
 

@@ -71,7 +71,7 @@ export async function callGeminiVisionOcr(
   mimeType: string,
   bookFormat: 'fukushima' | 'kayanoki' | 'pastexam',
   apiKey: string,
-  modelName: string = 'gemini-2.5-flash'
+  modelName: string = 'gemini-3.8-flash'
 ): Promise<string> {
   let prompt = PROMPT_FUKUSHIMA;
   if (bookFormat === 'kayanoki') prompt = PROMPT_KAYANOKI;

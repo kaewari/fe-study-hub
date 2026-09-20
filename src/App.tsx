@@ -94,7 +94,16 @@ export const App: React.FC = () => {
     const saved = localStorage.getItem('fe_api_keys');
     if (saved && !isDataEncrypted(saved)) {
       try {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed.map((item: ApiKeyConnection, idx: number) => {
+            const fallbackItem = INITIAL_API_KEYS.find((f) => f.id === item.id) || INITIAL_API_KEYS[idx];
+            if ((!item.key || item.key.trim() === '') && fallbackItem?.key) {
+              return { ...item, key: fallbackItem.key, name: item.name || fallbackItem.name };
+            }
+            return item;
+          });
+        }
       } catch {
         return INITIAL_API_KEYS;
       }
@@ -877,6 +886,7 @@ export const App: React.FC = () => {
       <AiStudyAssistant
         apiKeys={apiKeys}
         onUpdateApiKeys={setApiKeys}
+        activeModel={settings.activeModel}
         isOpen={isAiAssistantOpen}
         onToggleOpen={setIsAiAssistantOpen}
         externalQuery={aiAssistantQuery}

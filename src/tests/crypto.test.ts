@@ -124,4 +124,21 @@ describe('Crypto Utility - AES-256-GCM Authenticated Encryption', () => {
     const parsed = await decryptApiKeys(plainTextJson, []);
     expect(parsed).toEqual(legacyKeys);
   });
+
+  it('should backfill empty keys from fallback list when stored keys are blank', async () => {
+    const blankKeys: ApiKeyConnection[] = [
+      { id: 'key-1', name: 'acc-1', key: '', status: 'active', callsCount: 0 },
+      { id: 'key-2', name: 'acc-2', key: '   ', status: 'active', callsCount: 0 },
+    ];
+    const fallbackKeys: ApiKeyConnection[] = [
+      { id: 'key-1', name: 'acc-1', key: 'real-key-1', status: 'active', callsCount: 0 },
+      { id: 'key-2', name: 'acc-2', key: 'real-key-2', status: 'active', callsCount: 0 },
+    ];
+
+    const encrypted = await encryptApiKeys(blankKeys);
+    const restored = await decryptApiKeys(encrypted, fallbackKeys);
+
+    expect(restored[0].key).toBe('real-key-1');
+    expect(restored[1].key).toBe('real-key-2');
+  });
 });

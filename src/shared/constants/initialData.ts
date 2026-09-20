@@ -3,7 +3,7 @@ import { DailyScheduleItem, BookItem, ExamScoreRecord, ErrorNoteItem, AlgorithmP
 export const INITIAL_SETTINGS: UserSettings = {
   pin: '2026',
   isPinEnabled: false,
-  activeModel: 'gemini-2.5-flash',
+  activeModel: import.meta.env.VITE_GEMINI_MODEL || 'gemini-3.8-flash',
   autoRotateKeys: true,
   targetTotalHours: 135,
   pomodoroWorkMin: 25,
