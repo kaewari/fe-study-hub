@@ -92,7 +92,7 @@ export const SecurityWorkshopView: React.FC<SecurityWorkshopViewProps> = ({
           </BentoCard>
 
           {/* Security-First Strategy Card */}
-          <BentoCard title="🎯 Chiến Thuật Thi 'Security First'">
+          <BentoCard title="Chiến Thuật Thi 'Security First'">
             <div className="text-xs space-y-2 text-sumi-300">
               <p>
                 <strong>0 - 20 phút đầu:</strong> Lật ngay đến 4 câu bảo mật cuối đề môn B (từ câu 17 đến 20).

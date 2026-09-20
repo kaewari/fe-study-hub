@@ -28,7 +28,7 @@ export default {
         }
       },
       fontFamily: {
-        sans: ['"Zen Kaku Gothic New"', '"Noto Sans JP"', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+        sans: ['"Inter"', '"Zen Kaku Gothic New"', '"Noto Sans JP"', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
         mono: ['"JetBrains Mono"', '"Space Mono"', 'Menlo', 'monospace'],
       },
       borderRadius: {

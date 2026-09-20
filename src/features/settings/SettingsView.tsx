@@ -3,8 +3,20 @@ import { BentoCard } from '../../shared/components/BentoCard';
 import { Badge } from '../../shared/components/Badge';
 import { Button } from '../../shared/components/Button';
 import { ApiKeyConnection, UserSettings } from '../../shared/types';
-import { Download, Upload, RefreshCw, FileSpreadsheet, Palette, Check } from 'lucide-react';
+import {
+  Download,
+  Upload,
+  RefreshCw,
+  FileSpreadsheet,
+  Check,
+  Eye,
+  EyeOff,
+  ShieldCheck,
+  Lock,
+  Key,
+} from 'lucide-react';
 import { THEMES_LIST } from '../../shared/constants/themes';
+import { hashPassword, isPasswordHashed } from '../../shared/utils/crypto';
 
 interface SettingsViewProps {
   apiKeys: ApiKeyConnection[];
@@ -25,18 +37,75 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   onExportJson,
   onImportJson,
 }) => {
-  const [pinInput, setPinInput] = useState<string>(settings.pin);
   const [isPinEnabled, setIsPinEnabled] = useState<boolean>(settings.isPinEnabled);
   const [activeModel, setActiveModel] = useState<string>(settings.activeModel);
+  const [newPinInput, setNewPinInput] = useState<string>('');
+  const [confirmPinInput, setConfirmPinInput] = useState<string>('');
+  const [isPinSaving, setIsPinSaving] = useState<boolean>(false);
 
-  const handleSavePin = () => {
-    onUpdateSettings({
-      ...settings,
-      pin: pinInput,
-      isPinEnabled,
-      activeModel,
+  // API Key Visibility & In-place Edit
+  const [revealedKeyIds, setRevealedKeyIds] = useState<Record<string, boolean>>({});
+  const [editingKeyId, setEditingKeyId] = useState<string | null>(null);
+  const [editKeyInput, setEditKeyInput] = useState<string>('');
+
+  const toggleRevealKey = (keyId: string) => {
+    setRevealedKeyIds((prev) => ({ ...prev, [keyId]: !prev[keyId] }));
+  };
+
+  const handleStartEditKey = (k: ApiKeyConnection) => {
+    setEditingKeyId(k.id);
+    setEditKeyInput(k.key);
+  };
+
+  const handleSaveEditKey = (keyId: string) => {
+    const updated = apiKeys.map((k) => {
+      if (k.id === keyId) {
+        return {
+          ...k,
+          key: editKeyInput.trim(),
+          status: (k.status === 'exhausted_429' && editKeyInput.trim() ? 'active' : k.status) as 'active' | 'exhausted_429',
+        };
+      }
+      return k;
     });
-    alert('✅ Đã lưu cài đặt bảo mật và Model!');
+    onUpdateApiKeys(updated);
+    setEditingKeyId(null);
+    setEditKeyInput('');
+  };
+
+  const handleSaveSecurity = async () => {
+    if (newPinInput) {
+      if (newPinInput.length < 4 || newPinInput.length > 8) {
+        alert('Mã PIN phải từ 4 đến 8 chữ số.');
+        return;
+      }
+      if (newPinInput !== confirmPinInput) {
+        alert('Mã PIN xác nhận không trùng khớp.');
+        return;
+      }
+      setIsPinSaving(true);
+      try {
+        const hashed = await hashPassword(newPinInput);
+        onUpdateSettings({
+          ...settings,
+          pin: hashed,
+          isPinEnabled,
+          activeModel,
+        });
+        setNewPinInput('');
+        setConfirmPinInput('');
+        alert('Đã cập nhật và mã hóa mã PIN bằng PBKDF2-SHA256!');
+      } finally {
+        setIsPinSaving(false);
+      }
+    } else {
+      onUpdateSettings({
+        ...settings,
+        isPinEnabled,
+        activeModel,
+      });
+      alert('Đã lưu cài đặt bảo mật và Model!');
+    }
   };
 
   const handleToggleKeyStatus = (keyId: string) => {
@@ -71,19 +140,19 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     <div className="space-y-6 max-w-4xl mx-auto">
       {/* Theme Selector Bento Card */}
       <BentoCard
-        title="🎨 Giao Diện & Màu Sắc Hệ Thống (Theme Engine)"
-        subtitle="Hệ thống 8 theme màu cao cấp (5 Theme Tối & 3 Theme Sáng) tối ưu cho học tập và chống mỏi mắt"
+        title="Giao Diện & Màu Sắc Hệ Thống (Theme Engine)"
+        subtitle="Hệ thống 8 theme màu tinh tế (5 Theme Tối & 3 Theme Sáng) tối ưu cho học tập và chống mỏi mắt"
         badge={
-          <Badge variant="accent">
-            <Palette size={12} /> {THEMES_LIST.find((t) => t.id === (settings.theme || 'sumi'))?.name || 'Sumi & Slate'}
+          <Badge variant="accent" dot>
+            {THEMES_LIST.find((t) => t.id === (settings.theme || 'sumi'))?.name || 'Sumi & Cobalt'}
           </Badge>
         }
       >
         {/* Dark Themes Group */}
         <div className="mt-2">
           <div className="flex items-center gap-2 mb-2">
-            <span className="text-xs font-bold text-sumi-200 tracking-wider uppercase flex items-center gap-1.5">
-              🌙 Chế Độ Tối (Dark Themes - Chống Mỏi Mắt)
+            <span className="text-xs font-semibold text-sumi-200 tracking-wider uppercase flex items-center gap-1.5">
+              Chế Độ Tối (Dark Themes - Chống Mỏi Mắt)
             </span>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
@@ -94,9 +163,9 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   key={th.id}
                   type="button"
                   onClick={() => onUpdateSettings({ ...settings, theme: th.id })}
-                  className={`p-3 rounded-lg border text-left transition-all relative overflow-hidden flex flex-col justify-between ${
+                  className={`p-3 rounded-lg border text-left transition-colors relative overflow-hidden flex flex-col justify-between ${
                     isSelected
-                      ? 'border-[var(--theme-accent,#38bdf8)] bg-sumi-850 ring-1 ring-[var(--theme-accent,#38bdf8)] shadow-md'
+                      ? 'border-[var(--theme-accent,#3b82f6)] bg-sumi-850 ring-1 ring-[var(--theme-accent,#3b82f6)]'
                       : 'border-sumi-800 bg-sumi-900/60 hover:bg-sumi-850 hover:border-sumi-700'
                   }`}
                 >
@@ -104,7 +173,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                     <div className="flex items-center justify-between gap-1 mb-1">
                       <span className="font-semibold text-xs text-sumi-100">{th.name}</span>
                       {isSelected && (
-                        <span className="w-4 h-4 rounded-full bg-[var(--theme-accent,#38bdf8)] text-white flex items-center justify-center shrink-0 shadow-xs">
+                        <span className="w-4 h-4 rounded-full bg-[var(--theme-accent,#3b82f6)] text-white flex items-center justify-center shrink-0">
                           <Check size={10} />
                         </span>
                       )}
@@ -131,8 +200,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         {/* Light Themes Group */}
         <div className="mt-5 pt-4 border-t border-sumi-800/60">
           <div className="flex items-center gap-2 mb-2">
-            <span className="text-xs font-bold text-sumi-200 tracking-wider uppercase flex items-center gap-1.5">
-              ☀️ Chế Độ Sáng (Light Themes - Sáng Thanh Khiết & Thanh Lịch)
+            <span className="text-xs font-semibold text-sumi-200 tracking-wider uppercase flex items-center gap-1.5">
+              Chế Độ Sáng (Light Themes - Sáng Thanh Khiết & Thanh Lịch)
             </span>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -143,9 +212,9 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   key={th.id}
                   type="button"
                   onClick={() => onUpdateSettings({ ...settings, theme: th.id })}
-                  className={`p-3 rounded-lg border text-left transition-all relative overflow-hidden flex flex-col justify-between ${
+                  className={`p-3 rounded-lg border text-left transition-colors relative overflow-hidden flex flex-col justify-between ${
                     isSelected
-                      ? 'border-[var(--theme-accent,#38bdf8)] bg-sumi-850 ring-1 ring-[var(--theme-accent,#38bdf8)] shadow-md'
+                      ? 'border-[var(--theme-accent,#3b82f6)] bg-sumi-850 ring-1 ring-[var(--theme-accent,#3b82f6)]'
                       : 'border-sumi-800 bg-sumi-900/60 hover:bg-sumi-850 hover:border-sumi-700'
                   }`}
                 >
@@ -153,7 +222,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                     <div className="flex items-center justify-between gap-1 mb-1">
                       <span className="font-semibold text-xs text-sumi-100">{th.name}</span>
                       {isSelected && (
-                        <span className="w-4 h-4 rounded-full bg-[var(--theme-accent,#38bdf8)] text-white flex items-center justify-center shrink-0 shadow-xs">
+                        <span className="w-4 h-4 rounded-full bg-[var(--theme-accent,#3b82f6)] text-white flex items-center justify-center shrink-0">
                           <Check size={10} />
                         </span>
                       )}
@@ -181,40 +250,106 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       {/* 6 Gemini Keys Manager */}
       <BentoCard
         title="Quản Lý 6 Gemini API Keys (Omniroute Integration)"
-        subtitle="Hệ thống tự động failover tuần tự khi một key gặp lỗi 429 Quota Exceeded"
-        badge={<Badge variant="emerald">6 Keys Ready</Badge>}
+        subtitle="Hệ thống tự động failover tuần tự khi gặp lỗi 429. Toàn bộ API Key được mã hóa AES-256-GCM khi lưu trữ."
+        badge={
+          <Badge variant="emerald">
+            <ShieldCheck size={12} className="mr-1 inline" /> AES-256-GCM Encrypted
+          </Badge>
+        }
       >
         <div className="space-y-3 mt-2">
           {apiKeys.map((k, idx) => (
             <div
               key={k.id}
-              className="p-3 bg-sumi-850 border border-sumi-800 rounded-md flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs"
+              className="p-3 bg-sumi-850 border border-sumi-800 rounded-md flex flex-col gap-2 text-xs"
             >
-              <div className="flex items-center gap-3">
-                <span className="font-mono font-bold text-sumi-400">#{idx + 1}</span>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <strong className="text-sumi-100 font-mono">{k.name}</strong>
-                    <Badge variant={k.status === 'active' ? 'emerald' : 'rose'}>
-                      {k.status === 'active' ? 'Hoạt động' : 'Hết hạn mức (429)'}
-                    </Badge>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <span className="font-mono font-bold text-sumi-400">#{idx + 1}</span>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <strong className="text-sumi-100 font-mono">{k.name}</strong>
+                      <Badge variant={k.status === 'active' ? 'emerald' : 'rose'}>
+                        {k.status === 'active' ? 'Hoạt động' : 'Hết hạn mức (429)'}
+                      </Badge>
+                    </div>
+                    <div className="text-[10px] text-sumi-400 font-mono mt-0.5 flex items-center gap-1.5">
+                      <span>Khóa:</span>
+                      {k.key ? (
+                        <span className="text-sumi-200">
+                          {revealedKeyIds[k.id]
+                            ? k.key
+                            : `${k.key.slice(0, 8)}••••••••${k.key.slice(-4)}`}
+                        </span>
+                      ) : (
+                        <span className="text-sumi-500 italic">(Chưa thiết lập)</span>
+                      )}
+                    </div>
                   </div>
-                  <span className="text-[10px] text-sumi-400 font-mono">
-                    Khóa: {k.key ? `${k.key.slice(0, 8)}••••••••${k.key.slice(-4)}` : '(Chưa điền)'}
-                  </span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  {k.key && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => toggleRevealKey(k.id)}
+                      className="text-[11px]"
+                      title={revealedKeyIds[k.id] ? 'Ẩn khóa' : 'Xem khóa'}
+                    >
+                      {revealedKeyIds[k.id] ? <EyeOff size={12} /> : <Eye size={12} />}
+                      <span className="ml-1">{revealedKeyIds[k.id] ? 'Ẩn' : 'Hiện'}</span>
+                    </Button>
+                  )}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => (editingKeyId === k.id ? setEditingKeyId(null) : handleStartEditKey(k))}
+                    className="text-[11px]"
+                  >
+                    <Key size={12} />
+                    <span className="ml-1">{editingKeyId === k.id ? 'Đóng' : 'Sửa Key'}</span>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleToggleKeyStatus(k.id)}
+                    className="text-[11px]"
+                  >
+                    <RefreshCw size={12} />
+                    <span className="ml-1">{k.status === 'active' ? 'Đặt 429' : 'Kích hoạt'}</span>
+                  </Button>
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleToggleKeyStatus(k.id)}
-                  className="text-[11px]"
-                >
-                  <RefreshCw size={12} /> {k.status === 'active' ? 'Đặt 429' : 'Kích hoạt lại'}
-                </Button>
-              </div>
+              {/* Inline edit box */}
+              {editingKeyId === k.id && (
+                <div className="pt-2 border-t border-sumi-800 flex items-center gap-2">
+                  <input
+                    type="password"
+                    value={editKeyInput}
+                    onChange={(e) => setEditKeyInput(e.target.value)}
+                    placeholder="Dán mã Gemini API Key mới (AIzaSy...)"
+                    className="flex-1 bg-sumi-950 border border-sumi-700 text-sumi-100 font-mono text-xs rounded px-3 py-1.5 focus:outline-none focus:border-blue-500"
+                  />
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    onClick={() => handleSaveEditKey(k.id)}
+                    className="text-[11px]"
+                  >
+                    <Check size={12} /> Lưu & Mã hóa
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setEditingKeyId(null)}
+                    className="text-[11px]"
+                  >
+                    Hủy
+                  </Button>
+                </div>
+              )}
             </div>
           ))}
         </div>
@@ -222,7 +357,15 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
       {/* Security & PIN Settings */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <BentoCard title="Bảo Mật Truy Cập & Mã PIN" subtitle="Bảo vệ dữ liệu học tập khi triển khai web lên mạng">
+        <BentoCard
+          title="Bảo Mật Truy Cập & Mã PIN"
+          subtitle="Bảo vệ dữ liệu học tập cá nhân. Mã PIN được mã hóa một chiều bằng PBKDF2-SHA256 với Salt 128-bit."
+          badge={
+            <Badge variant="blue">
+              <Lock size={12} className="mr-1 inline" /> PBKDF2-SHA256 Salted
+            </Badge>
+          }
+        >
           <div className="space-y-4 mt-2 text-xs">
             <div className="flex items-center justify-between p-3 bg-sumi-850 border border-sumi-800 rounded">
               <div>
@@ -237,15 +380,39 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               />
             </div>
 
-            <div>
-              <label className="block text-sumi-400 mb-1">Mã PIN bảo vệ (Mặc định: 2026):</label>
-              <input
-                type="text"
-                value={pinInput}
-                onChange={(e) => setPinInput(e.target.value)}
-                maxLength={8}
-                className="w-full bg-sumi-950 border border-sumi-700 text-sumi-100 font-mono font-bold tracking-widest text-center text-sm rounded px-3 py-2 focus:outline-none focus:border-blue-500"
-              />
+            <div className="p-3 bg-sumi-900 border border-sumi-800 rounded space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="font-medium text-sumi-300">Trạng thái mã PIN hiện tại:</span>
+                <Badge variant={isPasswordHashed(settings.pin) ? 'emerald' : 'blue'}>
+                  {isPasswordHashed(settings.pin) ? 'Đã băm PBKDF2 an toàn' : 'Mặc định (2026)'}
+                </Badge>
+              </div>
+
+              <div>
+                <label className="block text-sumi-400 mb-1">Đổi mã PIN mới (4 - 8 chữ số):</label>
+                <input
+                  type="password"
+                  value={newPinInput}
+                  onChange={(e) => setNewPinInput(e.target.value.replace(/\D/g, ''))}
+                  maxLength={8}
+                  placeholder="Để trống nếu không muốn đổi PIN"
+                  className="w-full bg-sumi-950 border border-sumi-700 text-sumi-100 font-mono text-center text-sm rounded px-3 py-2 tracking-widest focus:outline-none focus:border-blue-500"
+                />
+              </div>
+
+              {newPinInput.length > 0 && (
+                <div>
+                  <label className="block text-sumi-400 mb-1">Xác nhận lại mã PIN mới:</label>
+                  <input
+                    type="password"
+                    value={confirmPinInput}
+                    onChange={(e) => setConfirmPinInput(e.target.value.replace(/\D/g, ''))}
+                    maxLength={8}
+                    placeholder="Nhập lại mã PIN mới"
+                    className="w-full bg-sumi-950 border border-sumi-700 text-sumi-100 font-mono text-center text-sm rounded px-3 py-2 tracking-widest focus:outline-none focus:border-blue-500"
+                  />
+                </div>
+              )}
             </div>
 
             <div>
@@ -260,8 +427,14 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               </select>
             </div>
 
-            <Button variant="primary" size="md" className="w-full" onClick={handleSavePin}>
-              Lưu Cài Đặt Bảo Mật
+            <Button
+              variant="primary"
+              size="md"
+              className="w-full"
+              onClick={handleSaveSecurity}
+              disabled={isPinSaving}
+            >
+              {isPinSaving ? 'Đang mã hóa & lưu...' : 'Lưu Cài Đặt Bảo Mật'}
             </Button>
           </div>
         </BentoCard>

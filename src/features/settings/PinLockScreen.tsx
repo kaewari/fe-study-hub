@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Lock, ArrowRight } from 'lucide-react';
+import { Lock, ArrowRight, Loader2 } from 'lucide-react';
+import { verifyPassword } from '../../shared/utils/crypto';
 
 interface PinLockScreenProps {
   correctPin: string;
@@ -12,38 +13,53 @@ export const PinLockScreen: React.FC<PinLockScreenProps> = ({
 }) => {
   const [enteredPin, setEnteredPin] = useState<string>('');
   const [error, setError] = useState<boolean>(false);
+  const [isVerifying, setIsVerifying] = useState<boolean>(false);
   const [remember30Days, setRemember30Days] = useState<boolean>(true);
 
-  const handleDigit = (digit: string) => {
-    if (enteredPin.length < 8) {
-      const nextPin = enteredPin + digit;
-      setEnteredPin(nextPin);
-      setError(false);
-      if (nextPin === correctPin) {
+  const checkPin = async (candidate: string) => {
+    if (isVerifying) return;
+    setIsVerifying(true);
+    try {
+      const isValid = await verifyPassword(candidate, correctPin);
+      if (isValid) {
         if (remember30Days) {
           localStorage.setItem('fe_pin_unlocked_until', (Date.now() + 30 * 86400000).toString());
         }
         onUnlocked();
+      } else {
+        setError(true);
+        setEnteredPin('');
       }
+    } catch {
+      setError(true);
+      setEnteredPin('');
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
+  const handleDigit = (digit: string) => {
+    if (isVerifying || enteredPin.length >= 8) return;
+    const nextPin = enteredPin + digit;
+    setEnteredPin(nextPin);
+    setError(false);
+
+    // Auto-check on 4 or more digits
+    if (nextPin.length >= 4) {
+      checkPin(nextPin);
     }
   };
 
   const handleDelete = () => {
+    if (isVerifying) return;
     setEnteredPin(enteredPin.slice(0, -1));
     setError(false);
   };
 
   const handleManualSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (enteredPin === correctPin) {
-      if (remember30Days) {
-        localStorage.setItem('fe_pin_unlocked_until', (Date.now() + 30 * 86400000).toString());
-      }
-      onUnlocked();
-    } else {
-      setError(true);
-      setEnteredPin('');
-    }
+    if (!enteredPin || isVerifying) return;
+    checkPin(enteredPin);
   };
 
   return (
@@ -65,9 +81,9 @@ export const PinLockScreen: React.FC<PinLockScreenProps> = ({
           {[0, 1, 2, 3].map((idx) => (
             <div
               key={idx}
-              className={`w-3.5 h-3.5 rounded-full border transition-all ${
+              className={`w-3 h-3 rounded-full border transition-all ${
                 enteredPin.length > idx
-                  ? 'bg-blue-500 border-blue-400 scale-110'
+                  ? 'bg-[var(--theme-accent,#3b82f6)] border-[var(--theme-accent,#3b82f6)]'
                   : 'bg-sumi-800 border-sumi-700'
               }`}
             />
@@ -75,7 +91,7 @@ export const PinLockScreen: React.FC<PinLockScreenProps> = ({
         </div>
 
         {error && (
-          <p className="text-xs text-rose-400 font-medium animate-bounce">
+          <p className="text-xs text-rose-400 font-medium">
             Mã PIN không chính xác. Mặc định là 2026.
           </p>
         )}
@@ -109,9 +125,10 @@ export const PinLockScreen: React.FC<PinLockScreenProps> = ({
           <button
             type="button"
             onClick={handleManualSubmit}
-            className="h-12 bg-blue-600 hover:bg-blue-500 text-white font-mono rounded transition-transform active:scale-95 flex items-center justify-center"
+            disabled={isVerifying}
+            className="h-12 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-mono rounded transition-transform active:scale-95 flex items-center justify-center"
           >
-            <ArrowRight size={18} />
+            {isVerifying ? <Loader2 size={18} className="animate-spin" /> : <ArrowRight size={18} />}
           </button>
         </div>
 

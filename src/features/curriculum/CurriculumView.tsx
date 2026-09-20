@@ -3,18 +3,18 @@ import { BentoCard } from '../../shared/components/BentoCard';
 import { Badge } from '../../shared/components/Badge';
 import { Button } from '../../shared/components/Button';
 import { BookItem, ChapterItem } from '../../shared/types';
-import { CheckCircle2, Camera } from 'lucide-react';
+import { CheckCircle2, NotebookPen } from 'lucide-react';
 
 interface CurriculumViewProps {
   books: BookItem[];
   onUpdateChapter: (bookId: string, chapterId: string, updates: Partial<ChapterItem>) => void;
-  onNavigateScan: (bookId: string, chapterId: string) => void;
+  onNavigateNotes?: (bookId: string, chapterId: string) => void;
 }
 
 export const CurriculumView: React.FC<CurriculumViewProps> = ({
   books,
   onUpdateChapter,
-  onNavigateScan,
+  onNavigateNotes,
 }) => {
   const [activeBookId, setActiveBookId] = useState<string>(books[0]?.id || 'book-kayanoki');
   const activeBook = books.find((b) => b.id === activeBookId) || books[0];
@@ -34,27 +34,27 @@ export const CurriculumView: React.FC<CurriculumViewProps> = ({
             <button
               key={book.id}
               onClick={() => setActiveBookId(book.id)}
-              className={`p-4 rounded-lg border text-left transition-all ${
+              className={`p-4 rounded-xl border text-left transition-colors cursor-pointer ${
                 isSelected
-                  ? 'bg-sumi-900 border-blue-500 shadow-lg'
-                  : 'bg-sumi-900/60 border-sumi-800 hover:border-sumi-700'
+                  ? 'bg-sumi-850 border-[var(--theme-accent,#3b82f6)] shadow-2xs'
+                  : 'bg-sumi-900 border-sumi-800 hover:border-sumi-700'
               }`}
             >
               <div className="flex items-start justify-between gap-2 mb-1.5">
                 <span className="text-xs font-semibold text-sumi-100 line-clamp-1">{book.title}</span>
-                <Badge variant={book.targetSubject === '科目B' ? 'rose' : 'blue'}>
+                <Badge variant={book.targetSubject === '科目B' ? 'rose' : 'blue'} dot>
                   {book.targetSubject}
                 </Badge>
               </div>
               <p className="text-[11px] text-sumi-400 mb-3">{book.author} | {book.edition}</p>
 
-              <div className="w-full bg-sumi-800 rounded-full h-1.5 overflow-hidden mb-2">
+              <div className="w-full bg-sumi-800 rounded-full h-1 overflow-hidden mb-2">
                 <div className="bg-blue-500 h-full rounded-full transition-all" style={{ width: `${pct}%` }} />
               </div>
 
               <div className="flex justify-between text-[11px] font-mono text-sumi-400">
-                <span>Xong: {completed}/{total}</span>
-                <span>Scan: {scanned}/{total}</span>
+                <span>Xong: <strong className="text-sumi-200">{completed}/{total}</strong></span>
+                <span>Scan: <strong className="text-sumi-200">{scanned}/{total}</strong></span>
               </div>
             </button>
           );
@@ -105,13 +105,13 @@ export const CurriculumView: React.FC<CurriculumViewProps> = ({
                           scanStatus: ch.scanStatus === 'scanned' ? 'unscanned' : 'scanned',
                         })
                       }
-                      className={`text-xs px-2.5 py-1 rounded font-mono border transition-colors ${
+                      className={`text-xs px-2.5 py-1 rounded-md font-mono border transition-colors ${
                         ch.scanStatus === 'scanned'
-                          ? 'bg-emerald-950/70 border-emerald-800 text-emerald-300'
-                          : 'bg-sumi-950 border-sumi-700 text-sumi-500 hover:text-sumi-300'
+                          ? 'bg-emerald-500/10 border-emerald-500/25 text-emerald-400'
+                          : 'bg-sumi-950/60 border-sumi-800 text-sumi-400 hover:text-sumi-200'
                       }`}
                     >
-                      {ch.scanStatus === 'scanned' ? '✓ Đã scan' : 'Chưa scan'}
+                      {ch.scanStatus === 'scanned' ? 'Đã scan' : 'Chưa scan'}
                     </button>
                   </td>
 
@@ -124,13 +124,13 @@ export const CurriculumView: React.FC<CurriculumViewProps> = ({
                           completedDate: ch.studyStatus !== 'completed' ? new Date().toISOString().split('T')[0] : undefined,
                         })
                       }
-                      className={`inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded font-medium border transition-colors ${
+                      className={`inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-md font-medium border transition-colors ${
                         ch.studyStatus === 'completed'
-                          ? 'bg-blue-950/70 border-blue-800 text-blue-300'
-                          : 'bg-sumi-950 border-sumi-700 text-sumi-500 hover:text-sumi-300'
+                          ? 'bg-blue-500/10 border-blue-500/25 text-blue-400'
+                          : 'bg-sumi-950/60 border-sumi-800 text-sumi-400 hover:text-sumi-200'
                       }`}
                     >
-                      <CheckCircle2 size={14} />
+                      <CheckCircle2 size={13} />
                       {ch.studyStatus === 'completed' ? 'Đã học' : 'Chưa học'}
                     </button>
                   </td>
@@ -156,11 +156,11 @@ export const CurriculumView: React.FC<CurriculumViewProps> = ({
                     <Button
                       variant="ghost"
                       size="sm"
-                      icon={<Camera size={14} />}
-                      onClick={() => onNavigateScan(activeBook.id, ch.id)}
+                      icon={<NotebookPen size={14} />}
+                      onClick={() => onNavigateNotes?.(activeBook.id, ch.id)}
                       className="text-xs text-blue-400 hover:text-blue-300"
                     >
-                      Scan & OCR
+                      Ghi chú
                     </Button>
                   </td>
                 </tr>

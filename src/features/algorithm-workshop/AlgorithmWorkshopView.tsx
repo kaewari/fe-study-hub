@@ -172,7 +172,7 @@ export const AlgorithmWorkshopView: React.FC<AlgorithmWorkshopViewProps> = ({
           </BentoCard>
 
           {/* IPA Syntax Cheat Sheet */}
-          <BentoCard title="📌 Cẩm Nang Ký Hiệu Ngôn Ngữ Giả IPA">
+          <BentoCard title="Cẩm Nang Ký Hiệu Ngôn Ngữ Giả IPA">
             <div className="text-xs space-y-2 mt-1">
               <div className="flex justify-between py-1 border-b border-sumi-800">
                 <span className="font-mono text-blue-400">x ← y</span>
@@ -269,8 +269,8 @@ export const AlgorithmWorkshopView: React.FC<AlgorithmWorkshopViewProps> = ({
                 </table>
               </div>
 
-              <p className="text-[11px] text-sumi-500">
-                💡 <strong>Mẹo phòng thi:</strong> Khi vẽ bảng trace trên bảng mica của Prometric, hãy viết thật gọn (chỉ viết chữ cái đầu của biến: i, j, m) để không bị hết diện tích bảng viết.
+              <p className="text-[11px] text-sumi-400">
+                <strong className="text-sumi-200">Mẹo phòng thi:</strong> Khi vẽ bảng trace trên bảng mica của Prometric, hãy viết thật gọn (chỉ viết chữ cái đầu của biến: i, j, m) để không bị hết diện tích bảng viết.
               </p>
             </div>
           </BentoCard>

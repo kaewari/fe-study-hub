@@ -66,7 +66,7 @@ export const PlannerView: React.FC<PlannerViewProps> = ({
           <span className="text-xs font-mono font-semibold text-sumi-200">
             Tuần {currentWeekIndex + 1} / {weeksCount}
             {currentWeekIndex === 0 && (
-              <Badge variant="amber" className="ml-2">★ Kickstart Toàn Tuần</Badge>
+              <Badge variant="amber" dot className="ml-2">Kickstart Tuần Đầu</Badge>
             )}
           </span>
           <Button
@@ -85,7 +85,7 @@ export const PlannerView: React.FC<PlannerViewProps> = ({
       </div>
 
       {/* Days Table */}
-      <BentoCard title={`📅 Lịch Học & Nhật Ký Tuần ${currentWeekIndex + 1}`}>
+      <BentoCard title={`Lịch Học & Nhật Ký Tuần ${currentWeekIndex + 1}`}>
         <div className="overflow-x-auto mt-2">
           <table className="w-full text-xs text-left border-collapse">
             <thead>

@@ -80,10 +80,10 @@ export const PomodoroView: React.FC<PomodoroViewProps> = ({
   return (
     <div className="max-w-md mx-auto space-y-6">
       <BentoCard
-        title="🍅 Đồng Hồ Tập Trung Pomodoro"
-        subtitle="Phương pháp quả cà chua 25 phút học / 5 phút nghỉ"
+        title="Đồng Hồ Tập Trung Pomodoro"
+        subtitle="Phương pháp tập trung 25 phút học / 5 phút nghỉ"
         badge={
-          <Badge variant={mode === 'work' ? 'rose' : 'emerald'}>
+          <Badge variant={mode === 'work' ? 'rose' : 'emerald'} dot>
             {mode === 'work' ? 'TẬP TRUNG HỌC' : 'NGHỈ NGƠI'}
           </Badge>
         }
@@ -139,8 +139,8 @@ export const PomodoroView: React.FC<PomodoroViewProps> = ({
           {/* Mode Switcher & Stats */}
           <div className="w-full pt-4 border-t border-sumi-800 flex items-center justify-between text-xs text-sumi-400">
             <div className="flex items-center gap-1.5">
-              <Flame size={16} className="text-amber-400" />
-              <span>Đã hoàn thành: <strong className="text-sumi-100 font-mono">{completedSessions}</strong> quả cà chua</span>
+              <Flame size={14} className="text-amber-400" />
+              <span>Đã hoàn thành: <strong className="text-sumi-100 font-mono">{completedSessions}</strong> phiên</span>
             </div>
             <span className="font-mono text-[11px] text-blue-400">
               +{completedSessions * workMinutes} phút học

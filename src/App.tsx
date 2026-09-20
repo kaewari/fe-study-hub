@@ -7,6 +7,7 @@ import {
   INITIAL_ERROR_NOTES,
   INITIAL_ALGORITHM_PRESETS,
   INITIAL_SECURITY_CASES,
+  INITIAL_STUDY_NOTES,
   generateInitialSchedule,
 } from './shared/constants/initialData';
 import {
@@ -18,12 +19,14 @@ import {
   ApiKeyConnection,
   UserSettings,
   ChapterItem,
+  StudyNoteItem,
 } from './shared/types';
 import rawVocabJson from './shared/constants/fe_vocab.json';
 
 import { DashboardView } from './features/dashboard/DashboardView';
 import { PlannerView } from './features/planner/PlannerView';
-import { ScannerView } from './features/scanner/ScannerView';
+import { StudyNotesView } from './features/notes/StudyNotesView';
+import { AiStudyAssistant } from './features/ai/AiStudyAssistant';
 import { CurriculumView } from './features/curriculum/CurriculumView';
 import { AlgorithmWorkshopView } from './features/algorithm-workshop/AlgorithmWorkshopView';
 import { SecurityWorkshopView } from './features/security-workshop/SecurityWorkshopView';
@@ -34,6 +37,13 @@ import { SurvivalGuideView } from './features/survival-guide/SurvivalGuideView';
 import { PomodoroView } from './features/pomodoro/PomodoroView';
 import { SettingsView } from './features/settings/SettingsView';
 import { PinLockScreen } from './features/settings/PinLockScreen';
+import {
+  encryptApiKeys,
+  decryptApiKeys,
+  isDataEncrypted,
+  hashPassword,
+  isPasswordHashed,
+} from './shared/utils/crypto';
 
 import { exportStudyDataToExcel } from './shared/services/excelExportService';
 import { THEMES_LIST } from './shared/constants/themes';
@@ -41,7 +51,8 @@ import { AppTheme } from './shared/types';
 import {
   LayoutDashboard,
   Calendar,
-  Camera,
+  CalendarClock,
+  NotebookPen,
   BookOpen,
   Code2,
   ShieldCheck,
@@ -81,7 +92,14 @@ export const App: React.FC = () => {
 
   const [apiKeys, setApiKeys] = useState<ApiKeyConnection[]>(() => {
     const saved = localStorage.getItem('fe_api_keys');
-    return saved ? JSON.parse(saved) : INITIAL_API_KEYS;
+    if (saved && !isDataEncrypted(saved)) {
+      try {
+        return JSON.parse(saved);
+      } catch {
+        return INITIAL_API_KEYS;
+      }
+    }
+    return INITIAL_API_KEYS;
   });
 
   const [schedule, setSchedule] = useState<DailyScheduleItem[]>(() => {
@@ -109,6 +127,15 @@ export const App: React.FC = () => {
     return saved ? JSON.parse(saved) : (rawVocabJson as VocabItem[]);
   });
 
+  const [studyNotes, setStudyNotes] = useState<StudyNoteItem[]>(() => {
+    const saved = localStorage.getItem('fe_study_notes');
+    return saved ? JSON.parse(saved) : INITIAL_STUDY_NOTES;
+  });
+
+  // AI Assistant Global State
+  const [isAiAssistantOpen, setIsAiAssistantOpen] = useState<boolean>(false);
+  const [aiAssistantQuery, setAiAssistantQuery] = useState<string | null>(null);
+
   // Lock State
   const [isLocked, setIsLocked] = useState<boolean>(() => {
     if (!settings.isPinEnabled) return false;
@@ -121,6 +148,58 @@ export const App: React.FC = () => {
   useEffect(() => {
     localStorage.setItem('fe_user_settings', JSON.stringify(settings));
   }, [settings]);
+
+  // Auto-migrate legacy plain-text PIN to salted PBKDF2 hash
+  useEffect(() => {
+    async function autoMigratePin() {
+      if (settings.pin && !isPasswordHashed(settings.pin)) {
+        const hashed = await hashPassword(settings.pin);
+        setSettings((prev) => ({ ...prev, pin: hashed }));
+      }
+    }
+    autoMigratePin();
+  }, [settings.pin]);
+
+  // Load & Decrypt API keys from localStorage on mount (AES-256-GCM)
+  useEffect(() => {
+    let isMounted = true;
+    async function initApiKeys() {
+      const saved = localStorage.getItem('fe_api_keys');
+      if (saved) {
+        const loaded = await decryptApiKeys(saved, INITIAL_API_KEYS);
+        if (isMounted) {
+          setApiKeys(loaded);
+        }
+        // Auto-encrypt legacy plain text in localStorage
+        if (!isDataEncrypted(saved)) {
+          const cipher = await encryptApiKeys(loaded);
+          localStorage.setItem('fe_api_keys', cipher);
+        }
+      } else {
+        const cipher = await encryptApiKeys(INITIAL_API_KEYS);
+        localStorage.setItem('fe_api_keys', cipher);
+      }
+    }
+    initApiKeys();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // Save encrypted API keys to localStorage whenever updated
+  useEffect(() => {
+    async function persistEncryptedKeys() {
+      if (apiKeys && apiKeys.length > 0) {
+        try {
+          const cipher = await encryptApiKeys(apiKeys);
+          localStorage.setItem('fe_api_keys', cipher);
+        } catch (err) {
+          console.error('Failed to encrypt API keys for storage:', err);
+        }
+      }
+    }
+    persistEncryptedKeys();
+  }, [apiKeys]);
 
   // Apply Active Theme to Root DOM and toggle dark/light mode class
   useEffect(() => {
@@ -151,10 +230,6 @@ export const App: React.FC = () => {
   };
 
   useEffect(() => {
-    localStorage.setItem('fe_api_keys', JSON.stringify(apiKeys));
-  }, [apiKeys]);
-
-  useEffect(() => {
     localStorage.setItem('fe_daily_schedule', JSON.stringify(schedule));
   }, [schedule]);
 
@@ -175,6 +250,10 @@ export const App: React.FC = () => {
   }, [vocabList]);
 
   useEffect(() => {
+    localStorage.setItem('fe_study_notes', JSON.stringify(studyNotes));
+  }, [studyNotes]);
+
+  useEffect(() => {
     localStorage.setItem('fe_sidebar_collapsed', String(isSidebarCollapsed));
   }, [isSidebarCollapsed]);
 
@@ -184,7 +263,7 @@ export const App: React.FC = () => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
       if (e.key === 'p' || e.key === 'P') setActiveTab('pomodoro');
       if (e.key === 't' || e.key === 'T') setActiveTab('algorithm-workshop');
-      if (e.key === 's' || e.key === 'S') setActiveTab('scanner');
+      if (e.key === 's' || e.key === 'S' || e.key === 'n' || e.key === 'N') setActiveTab('study-notes');
       if (e.key === 'd' || e.key === 'D') setActiveTab('dashboard');
       if (e.key === '[' || (e.ctrlKey && e.key === 'b') || (e.metaKey && e.key === 'b')) {
         e.preventDefault();
@@ -210,13 +289,6 @@ export const App: React.FC = () => {
     setBooks(updatedBooks);
   };
 
-  const handleUpdateChapterScan = (bookId: string, chapterId: string, markdown: string) => {
-    handleUpdateChapter(bookId, chapterId, {
-      scanStatus: 'scanned',
-      ocrContentMarkdown: markdown,
-    });
-  };
-
   const handleToggleVocabMastered = (id: string) => {
     const updated = vocabList.map((v) => (v.id === id ? { ...v, mastered: !v.mastered } : v));
     setVocabList(updated);
@@ -235,6 +307,7 @@ export const App: React.FC = () => {
       examScores,
       errorNotes,
       vocabList,
+      studyNotes,
       exportDate: new Date().toISOString(),
     };
     const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
@@ -253,6 +326,7 @@ export const App: React.FC = () => {
     if (data.examScores) setExamScores(data.examScores);
     if (data.errorNotes) setErrorNotes(data.errorNotes);
     if (data.vocabList) setVocabList(data.vocabList);
+    if (data.studyNotes) setStudyNotes(data.studyNotes);
     if (data.settings) setSettings(data.settings);
   };
 
@@ -279,7 +353,7 @@ export const App: React.FC = () => {
       items: [
         { id: 'curriculum', label: 'Giáo trình 3 cuốn', jpName: '3冊の教材', icon: <BookOpen size={17} /> },
         { id: 'vocab-hub', label: 'Mazii IT Từ vựng', jpName: 'IT用語集', icon: <BookA size={17} /> },
-        { id: 'scanner', label: 'Scan & OCR Sách', jpName: 'Scan & OCR AI', icon: <Camera size={17} /> },
+        { id: 'study-notes', label: 'Ghi chú học tập', jpName: '学習ノート', icon: <NotebookPen size={17} /> },
       ],
     },
     {
@@ -360,7 +434,7 @@ export const App: React.FC = () => {
               <span>{currentSection?.title}</span>
               <span className="text-sumi-600">/</span>
               <span className="text-sumi-200 font-semibold flex items-center gap-1.5">
-                <span className="text-[var(--theme-accent,#38bdf8)]">{currentItem?.icon}</span>
+                <span className="text-[var(--theme-accent,#3b82f6)]">{currentItem?.icon}</span>
                 <span>{currentItem?.label}</span>
                 <span className="text-sumi-500 font-normal">({currentItem?.jpName})</span>
               </span>
@@ -368,15 +442,16 @@ export const App: React.FC = () => {
           </div>
 
           {/* Quick Actions, Theme Switcher & Lock */}
-          <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex items-center gap-2 sm:gap-2.5">
             {/* Exam Countdown Chip */}
-            <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-mono px-2.5 py-1 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/25 shadow-xs">
-              ⏳ 19/04/2026 (Còn 29 ngày)
+            <span className="hidden sm:inline-flex items-center gap-1.5 text-[11px] font-mono px-2.5 py-1 rounded-md bg-blue-500/10 text-blue-400 border border-blue-500/20">
+              <CalendarClock size={13} className="text-blue-400 shrink-0" />
+              <span>19/04/2026 (Còn 29 ngày)</span>
             </span>
 
             {/* Streak Badge */}
-            <div className="hidden md:flex items-center gap-1 text-xs font-mono text-amber-400 bg-sumi-850/90 border border-sumi-800 px-2.5 py-1.5 rounded-lg shadow-sm">
-              <Flame size={14} className="text-amber-400 animate-pulse" />
+            <div className="hidden md:flex items-center gap-1.5 text-xs font-mono text-amber-400 bg-sumi-850/90 border border-sumi-800 px-2.5 py-1 rounded-md">
+              <Flame size={13} className="text-amber-400 shrink-0" />
               <span>{settings.streakDays} Day Streak</span>
             </div>
 
@@ -384,17 +459,17 @@ export const App: React.FC = () => {
             <button
               type="button"
               onClick={handleToggleLightDark}
-              className="p-1.5 sm:px-2.5 sm:py-1.5 text-xs font-medium rounded-lg bg-sumi-850 hover:bg-sumi-800 border border-sumi-700/80 text-sumi-200 flex items-center gap-1.5 transition-all active:scale-95 shadow-sm"
+              className="p-1.5 sm:px-2.5 sm:py-1.5 text-xs font-medium rounded-lg bg-sumi-850 hover:bg-sumi-800 border border-sumi-700/70 text-sumi-200 flex items-center gap-1.5 transition-colors active:scale-95"
               title="Chuyển nhanh Sáng / Tối (1 click)"
             >
               {THEMES_LIST.find((t) => t.id === (settings.theme || 'sumi'))?.mode === 'light' ? (
                 <>
-                  <Sun size={15} className="text-amber-500" />
+                  <Sun size={14} className="text-amber-500" />
                   <span className="hidden sm:inline">Chế độ Sáng</span>
                 </>
               ) : (
                 <>
-                  <Moon size={15} className="text-blue-400" />
+                  <Moon size={14} className="text-blue-400" />
                   <span className="hidden sm:inline">Chế độ Tối</span>
                 </>
               )}
@@ -405,16 +480,16 @@ export const App: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setIsThemeMenuOpen(!isThemeMenuOpen)}
-                className="px-2.5 py-1.5 text-xs font-medium rounded-lg bg-sumi-850 hover:bg-sumi-800 border border-sumi-700/80 text-sumi-100 flex items-center gap-2 transition-all active:scale-95 shadow-sm"
+                className="px-2.5 py-1.5 text-xs font-medium rounded-lg bg-sumi-850 hover:bg-sumi-800 border border-sumi-700/70 text-sumi-100 flex items-center gap-2 transition-colors active:scale-95"
                 title="Chọn giao diện & màu sắc"
               >
-                <Palette size={14} className="text-[var(--theme-accent,#38bdf8)]" />
-                <span className="hidden md:inline max-w-[90px] truncate">
+                <Palette size={14} className="text-[var(--theme-accent,#3b82f6)]" />
+                <span className="hidden md:inline max-w-[110px] truncate">
                   {THEMES_LIST.find((t) => t.id === (settings.theme || 'sumi'))?.name || 'Theme'}
                 </span>
                 <div
-                  className="w-3 h-3 rounded-full border border-white/20 shrink-0 shadow-xs"
-                  style={{ backgroundColor: THEMES_LIST.find((t) => t.id === (settings.theme || 'sumi'))?.preview.accent || '#38bdf8' }}
+                  className="w-2.5 h-2.5 rounded-full border border-white/20 shrink-0"
+                  style={{ backgroundColor: THEMES_LIST.find((t) => t.id === (settings.theme || 'sumi'))?.preview.accent || '#3b82f6' }}
                 />
                 <ChevronDown size={12} className={`text-sumi-400 transition-transform duration-200 ${isThemeMenuOpen ? 'rotate-180' : ''}`} />
               </button>
@@ -426,21 +501,29 @@ export const App: React.FC = () => {
                     className="fixed inset-0 z-40"
                     onClick={() => setIsThemeMenuOpen(false)}
                   />
-                  <div className="absolute right-0 mt-2 w-80 sm:w-96 rounded-xl bg-sumi-900 border border-sumi-700 shadow-2xl p-4 z-50 animate-in fade-in zoom-in-95 duration-150">
+                  <div className="absolute right-0 mt-2 w-80 sm:w-96 rounded-xl bg-sumi-900 border border-sumi-700 shadow-xl p-4 z-50 animate-in fade-in zoom-in-95 duration-150">
                     <div className="flex items-center justify-between pb-3 border-b border-sumi-800">
                       <div>
                         <h4 className="text-xs font-bold text-sumi-100 uppercase tracking-wider flex items-center gap-1.5">
-                          <Palette size={13} className="text-[var(--theme-accent,#38bdf8)]" />
+                          <Palette size={13} className="text-[var(--theme-accent,#3b82f6)]" />
                           Giao Diện (Theme Engine)
                         </h4>
-                        <p className="text-[10px] text-sumi-400 mt-0.5">8 phong cách thẩm mỹ chuẩn quốc tế</p>
+                        <p className="text-[10px] text-sumi-400 mt-0.5">8 phong cách tối ưu thị giác, chống mỏi mắt</p>
                       </div>
                       <button
                         type="button"
                         onClick={handleToggleLightDark}
-                        className="text-[11px] px-2 py-1 rounded bg-sumi-850 hover:bg-sumi-800 border border-sumi-700 text-sumi-200 flex items-center gap-1 transition-colors"
+                        className="text-[11px] px-2 py-1 rounded-md bg-sumi-850 hover:bg-sumi-800 border border-sumi-700/80 text-sumi-200 flex items-center gap-1 transition-colors"
                       >
-                        {THEMES_LIST.find((t) => t.id === (settings.theme || 'sumi'))?.mode === 'light' ? '🌙 Sang Tối' : '☀️ Sang Sáng'}
+                        {THEMES_LIST.find((t) => t.id === (settings.theme || 'sumi'))?.mode === 'light' ? (
+                          <>
+                            <Moon size={11} className="text-blue-400" /> Sang Tối
+                          </>
+                        ) : (
+                          <>
+                            <Sun size={11} className="text-amber-400" /> Sang Sáng
+                          </>
+                        )}
                       </button>
                     </div>
 
@@ -454,14 +537,14 @@ export const App: React.FC = () => {
                             onClick={() => handleSelectTheme(th.id)}
                             className={`p-2.5 rounded-lg border text-left transition-all relative flex flex-col justify-between ${
                               isSelected
-                                ? 'border-[var(--theme-accent,#38bdf8)] bg-sumi-850 ring-1 ring-[var(--theme-accent,#38bdf8)]'
+                                ? 'border-[var(--theme-accent,#3b82f6)] bg-sumi-850 ring-1 ring-[var(--theme-accent,#3b82f6)]'
                                 : 'border-sumi-800 bg-sumi-950/60 hover:bg-sumi-850 hover:border-sumi-700'
                             }`}
                           >
                             <div className="flex items-center justify-between gap-1 mb-1">
                               <span className="font-semibold text-xs text-sumi-100 truncate">{th.name}</span>
                               {isSelected && (
-                                <Check size={12} className="text-[var(--theme-accent,#38bdf8)] shrink-0" />
+                                <Check size={12} className="text-[var(--theme-accent,#3b82f6)] shrink-0" />
                               )}
                             </div>
                             <span className="text-[10px] text-sumi-400 block truncate mb-2">{th.jpName}</span>
@@ -527,9 +610,9 @@ export const App: React.FC = () => {
                           type="button"
                           onClick={() => setActiveTab(item.id)}
                           title={`${item.label} (${item.jpName})`}
-                          className={`relative w-10 h-10 mx-auto rounded-lg flex items-center justify-center transition-all ${
+                          className={`relative w-10 h-10 mx-auto rounded-lg flex items-center justify-center transition-colors ${
                             isActive
-                              ? 'bg-sumi-850 text-[var(--theme-accent,#38bdf8)] shadow-sm ring-1 ring-[var(--theme-accent,#38bdf8)]'
+                              ? 'bg-sumi-850 text-[var(--theme-accent,#3b82f6)] border border-sumi-700/80 shadow-2xs'
                               : 'text-sumi-400 hover:text-sumi-100 hover:bg-sumi-850/60'
                           }`}
                         >
@@ -548,16 +631,16 @@ export const App: React.FC = () => {
                         key={item.id}
                         type="button"
                         onClick={() => setActiveTab(item.id)}
-                        className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-all group ${
+                        className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-colors group ${
                           isActive
-                            ? 'bg-sumi-850 text-sumi-100 font-semibold border-l-2 border-[var(--theme-accent,#38bdf8)] shadow-xs'
+                            ? 'bg-sumi-850 text-sumi-100 font-semibold border-l-2 border-[var(--theme-accent,#3b82f6)] shadow-2xs'
                             : 'text-sumi-400 hover:text-sumi-200 hover:bg-sumi-850/50'
                         }`}
                       >
                         <div className="flex items-center gap-2.5 min-w-0">
                           <span
                             className={`shrink-0 transition-colors ${
-                              isActive ? 'text-[var(--theme-accent,#38bdf8)]' : 'text-sumi-400 group-hover:text-sumi-200'
+                              isActive ? 'text-[var(--theme-accent,#3b82f6)]' : 'text-sumi-400 group-hover:text-sumi-200'
                             }`}
                           >
                             {item.icon}
@@ -570,7 +653,7 @@ export const App: React.FC = () => {
                           </div>
                         </div>
                         {item.badge !== undefined && (
-                          <span className="px-1.5 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-rose-500/20 text-rose-400 border border-rose-500/30">
+                          <span className="px-1.5 py-0.5 rounded-md text-[10px] font-mono font-semibold bg-rose-500/15 text-rose-400 border border-rose-500/25">
                             {item.badge}
                           </span>
                         )}
@@ -587,8 +670,8 @@ export const App: React.FC = () => {
             <div className="p-3 border-t border-sumi-800/70 bg-sumi-950/40">
               <div className="flex items-center justify-between text-xs text-sumi-400 mb-2">
                 <span className="font-mono text-[11px]">Kỳ thi 19/04/2026</span>
-                <span className="px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 text-[10px] font-mono">
-                  -29 ngày
+                <span className="px-1.5 py-0.5 rounded-md bg-blue-500/10 text-blue-400 border border-blue-500/20 text-[10px] font-mono">
+                  Còn 29 ngày
                 </span>
               </div>
               <button
@@ -645,14 +728,14 @@ export const App: React.FC = () => {
                             }}
                             className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-all ${
                               isActive
-                                ? 'bg-sumi-850 text-sumi-100 font-semibold border-l-2 border-[var(--theme-accent,#38bdf8)]'
+                                ? 'bg-sumi-850 text-sumi-100 font-semibold border-l-2 border-[var(--theme-accent,#3b82f6)]'
                                 : 'text-sumi-400 hover:text-sumi-200 hover:bg-sumi-850/50'
                             }`}
                           >
                             <div className="flex items-center gap-2.5 min-w-0">
                               <span
                                 className={`shrink-0 ${
-                                  isActive ? 'text-[var(--theme-accent,#38bdf8)]' : 'text-sumi-400'
+                                  isActive ? 'text-[var(--theme-accent,#3b82f6)]' : 'text-sumi-400'
                                 }`}
                               >
                                 {item.icon}
@@ -665,7 +748,7 @@ export const App: React.FC = () => {
                               </div>
                             </div>
                             {item.badge !== undefined && (
-                              <span className="px-1.5 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-rose-500/20 text-rose-400 border border-rose-500/30">
+                              <span className="px-1.5 py-0.5 rounded-md text-[10px] font-mono font-semibold bg-rose-500/15 text-rose-400 border border-rose-500/25">
                                 {item.badge}
                               </span>
                             )}
@@ -697,12 +780,20 @@ export const App: React.FC = () => {
               <PlannerView schedule={schedule} onUpdateSchedule={setSchedule} />
             )}
 
-            {activeTab === 'scanner' && (
-              <ScannerView
-                books={books}
-                apiKeys={apiKeys}
-                onUpdateApiKeys={setApiKeys}
-                onUpdateChapterScan={handleUpdateChapterScan}
+            {activeTab === 'study-notes' && (
+              <StudyNotesView
+                notes={studyNotes}
+                onAddNote={(note) => setStudyNotes([note, ...studyNotes])}
+                onUpdateNote={(id, updates) =>
+                  setStudyNotes(studyNotes.map((n) => (n.id === id ? { ...n, ...updates } : n)))
+                }
+                onDeleteNote={(id) => setStudyNotes(studyNotes.filter((n) => n.id !== id))}
+                onAskAiAboutNote={(note) => {
+                  setAiAssistantQuery(
+                    `Hãy phân tích, tóm tắt và bổ sung thêm các điểm mấu chốt cho ghi chú này:\nTiêu đề: ${note.title}\nNội dung:\n${note.content}`
+                  );
+                  setIsAiAssistantOpen(true);
+                }}
               />
             )}
 
@@ -710,8 +801,8 @@ export const App: React.FC = () => {
               <CurriculumView
                 books={books}
                 onUpdateChapter={handleUpdateChapter}
-                onNavigateScan={(_bookId, _chapterId) => {
-                  setActiveTab('scanner');
+                onNavigateNotes={(_bookId, _chapterId) => {
+                  setActiveTab('study-notes');
                 }}
               />
             )}
@@ -777,10 +868,20 @@ export const App: React.FC = () => {
 
           {/* Footer */}
           <footer className="mt-12 border-t border-sumi-800/70 pt-4 pb-2 text-center text-xs text-sumi-500 font-mono">
-            FE Study Hub © 2026 | Built for Fundamental IT Engineers in Japan | Shortcuts: [D] Dashboard, [S] Scan, [T] Trace, [P] Pomodoro, [[] Thu gọn Sidebar
+            FE Study Hub © 2026 | Built for Fundamental IT Engineers in Japan | Shortcuts: [D] Dashboard, [S/N] Notes, [T] Trace, [P] Pomodoro, [Ctrl+J] AI Tutor, [[] Thu gọn Sidebar
           </footer>
         </main>
       </div>
+
+      {/* Global Floating AI Tutor Assistant */}
+      <AiStudyAssistant
+        apiKeys={apiKeys}
+        onUpdateApiKeys={setApiKeys}
+        isOpen={isAiAssistantOpen}
+        onToggleOpen={setIsAiAssistantOpen}
+        externalQuery={aiAssistantQuery}
+        onClearExternalQuery={() => setAiAssistantQuery(null)}
+      />
     </div>
   );
 };

@@ -1,4 +1,4 @@
-import { DailyScheduleItem, BookItem, ExamScoreRecord, ErrorNoteItem, AlgorithmPreset, SecurityCaseStudy, ApiKeyConnection, UserSettings } from '../types';
+import { DailyScheduleItem, BookItem, ExamScoreRecord, ErrorNoteItem, AlgorithmPreset, SecurityCaseStudy, ApiKeyConnection, UserSettings, StudyNoteItem } from '../types';
 
 export const INITIAL_SETTINGS: UserSettings = {
   pin: '2026',
@@ -469,3 +469,109 @@ export function generateInitialSchedule(): DailyScheduleItem[] {
 
   return items;
 }
+
+export const INITIAL_STUDY_NOTES: StudyNoteItem[] = [
+  {
+    id: 'note-ipa-pseudocode',
+    title: 'Quy tắc mã giả IPA (擬似言語) trong đề thi 科目B',
+    category: 'algorithm',
+    pinned: true,
+    tags: ['擬似言語', '科目B', '配列', 'アルゴリズム'],
+    content: `### 1. Chỉ số mảng (配列の添字)
+* Đề thi IPA quy định chỉ số mảng bắt đầu từ **1** chứ không phải 0 như C/Java/JS:
+  \`arr[1]\` là phần tử đầu tiên.
+* Phép gán giá trị sử dụng mũi tên trái: \`x ← y\` (gán y cho x).
+* Phép so sánh bằng sử dụng dấu \`=\`, khác nhau sử dụng \`≠\`.
+
+### 2. Vòng lặp cơ bản
+* \`for (i from 1 to N step 1)\`: lặp từ 1 đến N (bao gồm cả N).
+* \`while (điều kiện)\`: lặp chừng nào điều kiện còn Đúng.
+
+### 3. Mẹo Trace Biến (トレース表)
+* Khi làm bài thi 科目B, luôn vẽ nháp bảng biến: Cột 1 là biến đếm \`i\`, Cột 2 là giá trị đang so sánh, Cột 3 là cờ \`flag\` hoặc mảng kết quả.
+* Đừng nhẩm trong đầu, vẽ ra giấy nháp thi CBT để không bao giờ bị lệch chỉ số mảng (off-by-one error).`,
+    createdAt: '2026-09-20T10:00:00.000Z',
+    updatedAt: '2026-09-20T10:00:00.000Z',
+  },
+  {
+    id: 'note-encryption-schemes',
+    title: 'Bảng phân biệt: Khóa đối xứng (共通鍵) vs Khóa bất đối xứng (公開鍵)',
+    category: 'security',
+    pinned: true,
+    tags: ['暗号化', '共通鍵', '公開鍵', 'ハイブリッド暗号'],
+    content: `### 1. Mã hóa khóa đối xứng (共通鍵暗号方式)
+* **Đặc điểm**: Mã hóa và giải mã dùng CHUNG một khóa bí mật.
+* **Tốc độ**: Rất nhanh, phù hợp mã hóa khối lượng dữ liệu lớn.
+* **Vấn đề**: Vấn đề phân phối khóa (鍵配送問題) — làm sao gửi khóa bí mật an toàn qua mạng?
+* **Thuật toán tiêu biểu**: **AES** (chuẩn hiện đại, độ dài 128/192/256 bit), DES/3DES (đã cũ).
+
+### 2. Mã hóa khóa bất đối xứng / Khóa công khai (公開鍵暗号方式)
+* **Đặc điểm**: Gồm cặp khóa (Khóa công khai - Public Key & Khóa bí mật - Private Key).
+* **Mã hóa gửi tin an toàn**: Người gửi mã hóa bằng Public Key của người nhận -> Chỉ người nhận có Private Key mới giải mã được.
+* **Chữ ký số (デジタル署名)**: Người gửi ký bằng Private Key của mình -> Người nhận xác thực bằng Public Key của người gửi (chống chối bỏ, kiểm tra tính toàn vẹn).
+* **Thuật toán tiêu biểu**: **RSA** (dựa trên độ khó phân tích thừa số nguyên tố), ECC (đường cong Elliptic).
+
+### 3. Mô hình lai (ハイブリッド暗号方式)
+* Kết hợp cả 2: Dùng RSA mã hóa chiếc khóa đối xứng (Session Key), rồi dùng AES mã hóa nội dung thật. (Cơ chế nền tảng của SSL/TLS).`,
+    createdAt: '2026-09-20T11:00:00.000Z',
+    updatedAt: '2026-09-20T11:00:00.000Z',
+  },
+  {
+    id: 'note-osi-model',
+    title: 'Mô hình OSI 7 tầng và Thiết bị mạng tương ứng',
+    category: 'technology',
+    pinned: false,
+    tags: ['OSI基本参照モデル', 'ネットワーク', 'ルータ', 'スイッチ'],
+    content: `### 7 Tầng OSI và Thiết bị phần cứng
+* **Tầng 7 - Application (アプリケーション層)**: HTTP, HTTPS, FTP, DNS, SMTP. Thiết bị: WAF, Proxy.
+* **Tầng 4 - Transport (トランスポート層)**: TCP (tin cậy, bắt tay 3 bước), UDP (tốc độ, realtime). Đơn vị: Segment.
+* **Tầng 3 - Network (ネットワーク層)**: IP, ICMP, ARP. Đơn vị: Packet. Thiết bị chính: **Router (ルータ)**, L3 Switch.
+* **Tầng 2 - Data Link (データリンク層)**: Địa chỉ MAC, Ethernet. Đơn vị: Frame. Thiết bị chính: **L2 Switch (スイッチングハブ)**, Bridge.
+* **Tầng 1 - Physical (物理層)**: Cáp mạng, sóng radio, bit 0/1. Thiết bị: **Repeater (リピータ)**, Hub thông thường.
+
+> **Mẹo thi**: Câu hỏi thường hỏi *"Thiết bị nào hoạt động ở tầng Network dựa trên địa chỉ IP?"* -> Đáp án luôn là **Router (ルータ)**!`,
+    createdAt: '2026-09-20T12:00:00.000Z',
+    updatedAt: '2026-09-20T12:00:00.000Z',
+  },
+  {
+    id: 'note-project-management',
+    title: 'Quản lý dự án: Phương pháp Đường găng (PERT / クリティカルパス)',
+    category: 'management',
+    pinned: false,
+    tags: ['クリティカルパス', 'PERT', 'マネジメント', '日程計画'],
+    content: `### Phương pháp xác định Critical Path (Đường găng)
+* **Định nghĩa**: Chuỗi các công việc có tổng thời gian dài nhất từ khi bắt đầu đến kết thúc dự án.
+* **Đặc tính cốt lõi**:
+  * Các công việc trên đường găng có thời gian dự trữ tự do (Slack/Float) = **0**.
+  * Bất kỳ công việc nào trên đường găng bị chậm trễ dù chỉ 1 ngày thì toàn bộ dự án sẽ bị chậm trễ bấy nhiêu ngày!
+* **Mẹo tính toán đề thi IPA**:
+  1. Vẽ sơ đồ mũi tên (Arrow Diagram) với các nút sự kiện.
+  2. Tính thời điểm sớm nhất (Earliest Time - đi xuôi từ trái qua phải, lấy max).
+  3. Tính thời điểm muộn nhất (Latest Time - đi ngược từ phải qua trái, lấy min).
+  4. Nút nào có Earliest = Latest chính là nằm trên Critical Path.`,
+    createdAt: '2026-09-20T13:00:00.000Z',
+    updatedAt: '2026-09-20T13:00:00.000Z',
+  },
+  {
+    id: 'note-strategy-frameworks',
+    title: 'Các ma trận chiến lược kinh doanh kinh điển trong đề thi FE',
+    category: 'strategy',
+    pinned: false,
+    tags: ['PPM', 'SWOT', '3C', 'ストラテジ'],
+    content: `### 1. PPM (Product Portfolio Management - BCG Matrix)
+* **Trục tung**: Tốc độ tăng trưởng thị trường (Market Growth Rate).
+* **Trục hoành**: Thị phần tương đối (Relative Market Share).
+* 4 Ô vị thế:
+  * ⭐ **Star (花形)**: Tăng trưởng cao, thị phần cao. Cần đầu tư để duy trì.
+  * 🐄 **Cash Cow (金のなる木)**: Tăng trưởng thấp, thị phần cao. Cỗ máy tạo dòng tiền, không cần tái đầu tư lớn.
+  * ❓ **Question Mark (問題児)**: Tăng trưởng cao, thị phần thấp. Cần đầu tư để biến thành Star, nếu không sẽ thành Dog.
+  * 🐕 **Dog (負け犬)**: Tăng trưởng thấp, thị phần thấp. Nên xem xét rút lui/bán tháo.
+
+### 2. Mô hình 3C
+* **Customer (市場・顧客)**
+* **Competitor (競合)**
+* **Company (自社)**`,
+    createdAt: '2026-09-20T14:00:00.000Z',
+    updatedAt: '2026-09-20T14:00:00.000Z',
+  },
+];

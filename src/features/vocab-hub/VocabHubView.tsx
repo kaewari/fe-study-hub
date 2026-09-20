@@ -154,10 +154,10 @@ export const VocabHubView: React.FC<VocabHubViewProps> = ({
                 <button
                   key={cat}
                   onClick={() => setSelectedCategory(cat)}
-                  className={`text-[11px] px-2.5 py-1 rounded font-medium border transition-colors whitespace-nowrap ${
+                  className={`text-[11px] px-2.5 py-1 rounded-md font-medium border transition-colors whitespace-nowrap cursor-pointer ${
                     selectedCategory === cat
-                      ? 'bg-blue-950/80 border-blue-500 text-blue-300'
-                      : 'bg-sumi-850 border-sumi-700 text-sumi-400 hover:text-sumi-200'
+                      ? 'bg-blue-500/10 border-blue-500/30 text-blue-400 font-semibold'
+                      : 'bg-sumi-850/80 border-sumi-800 text-sumi-400 hover:text-sumi-200'
                   }`}
                 >
                   {cat === 'all' ? 'Tất cả' : cat}
@@ -233,7 +233,7 @@ export const VocabHubView: React.FC<VocabHubViewProps> = ({
 
           <div
             onClick={() => setIsFlipped(!isFlipped)}
-            className="min-h-[260px] p-8 bg-sumi-900 border border-sumi-700 hover:border-sumi-600 rounded-xl shadow-2xl flex flex-col items-center justify-center text-center cursor-pointer transition-all duration-200 select-none"
+            className="min-h-[260px] p-8 bg-sumi-900 border border-sumi-800 hover:border-sumi-700/80 rounded-xl flex flex-col items-center justify-center text-center cursor-pointer transition-colors duration-150 select-none"
           >
             {!isFlipped ? (
               // Front: Kanji & Pronunciation

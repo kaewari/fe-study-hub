@@ -172,6 +172,7 @@ export type AppTheme =
   | 'one-dark';
 
 export interface UserSettings {
+  /** PBKDF2-SHA256 salted hash (format: pbkdf2:v1:<saltHex>:<hashHex>) or legacy plain-text before migration */
   pin: string;
   isPinEnabled: boolean;
   activeModel: string;
@@ -182,4 +183,23 @@ export interface UserSettings {
   streakDays: number;
   lastStudiedDate?: string;
   theme?: AppTheme;
+}
+
+export type StudyNoteCategory =
+  | 'technology'   // テクノロジ系 (Công nghệ)
+  | 'management'   // マネジメント系 (Quản lý)
+  | 'strategy'     // ストラテジ系 (Chiến lược)
+  | 'algorithm'    // アルゴリズム (Mã giả 科目B)
+  | 'security'     // セキュリティ (An toàn thông tin)
+  | 'other';        // Khác / Mẹo phòng thi
+
+export interface StudyNoteItem {
+  id: string;
+  title: string;
+  category: StudyNoteCategory;
+  content: string;
+  tags: string[];
+  pinned?: boolean;
+  createdAt: string;
+  updatedAt: string;
 }

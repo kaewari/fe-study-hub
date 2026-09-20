@@ -218,9 +218,9 @@ export const ErrorNotebookView: React.FC<ErrorNotebookViewProps> = ({
                       {getCauseBadge(note.cause)}
                     </div>
                     {note.mastered ? (
-                      <Badge variant="emerald">★ Đã Mastered</Badge>
+                      <Badge variant="emerald" dot>Đã Mastered</Badge>
                     ) : (
-                      <Badge variant="amber">Đang ôn tập</Badge>
+                      <Badge variant="amber" dot>Đang ôn tập</Badge>
                     )}
                   </div>
 
@@ -232,8 +232,8 @@ export const ErrorNotebookView: React.FC<ErrorNotebookViewProps> = ({
                   </div>
 
                   {note.keyTakeaway && (
-                    <p className="text-[11px] text-amber-300 bg-amber-950/20 p-2 rounded border border-amber-900/40">
-                      💡 <strong>Key Takeaway:</strong> {note.keyTakeaway}
+                    <p className="text-[11px] text-amber-400 bg-amber-500/10 p-2 rounded border border-amber-500/20">
+                      <strong className="text-amber-300">Key Takeaway:</strong> {note.keyTakeaway}
                     </p>
                   )}
 

@@ -157,11 +157,11 @@ export const ExamSimulatorView: React.FC<ExamSimulatorViewProps> = ({
               </div>
 
               {/* Live Evaluation Box */}
-              <div className={`p-3.5 rounded border ${previewResult.passed ? 'bg-emerald-950/30 border-emerald-800' : 'bg-rose-950/30 border-rose-800'} space-y-2`}>
+              <div className={`p-3.5 rounded-lg border ${previewResult.passed ? 'bg-emerald-500/10 border-emerald-500/25' : 'bg-rose-500/10 border-rose-500/25'} space-y-2`}>
                 <div className="flex items-center justify-between">
                   <span className="font-semibold text-xs text-sumi-200">Đánh giá chuẩn IPA:</span>
-                  <Badge variant={previewResult.passed ? (previewResult.isSafe ? 'emerald' : 'blue') : 'rose'}>
-                    {previewResult.passed ? (previewResult.isSafe ? '★ AN TOÀN (Safe)' : '〇 ĐẠT (Pass)') : '✕ TRƯỢT (Fail)'}
+                  <Badge variant={previewResult.passed ? (previewResult.isSafe ? 'emerald' : 'blue') : 'rose'} dot>
+                    {previewResult.passed ? (previewResult.isSafe ? 'AN TOÀN (Safe)' : 'ĐẠT (Pass)') : 'TRƯỢT (Fail)'}
                   </Badge>
                 </div>
                 <div className="grid grid-cols-2 gap-2 text-[11px] font-mono pt-1">
@@ -234,7 +234,7 @@ export const ExamSimulatorView: React.FC<ExamSimulatorViewProps> = ({
                         <span className="text-[10px] text-sumi-500 block">({score.subjectBAlgorithmCorrect}+{score.subjectBSecurityCorrect}/20)</span>
                       </td>
                       <td className="py-2.5 px-3 text-center whitespace-nowrap">
-                        <Badge variant={score.overallPass ? 'emerald' : 'rose'}>
+                        <Badge variant={score.overallPass ? 'emerald' : 'rose'} dot>
                           {score.overallPass ? '合格 PASS' : '不合格 FAIL'}
                         </Badge>
                       </td>

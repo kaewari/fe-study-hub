@@ -121,7 +121,7 @@ export const SurvivalGuideView: React.FC = () => {
               <span className="font-mono font-bold text-sumi-100">1,540 円</span>
             </div>
             <p className="text-[11px] text-emerald-400 mt-2">
-              💡 Tổng đầu tư khoảng ~13,000 Yên. Chứng chỉ có giá trị vĩnh viễn, được cộng 5 điểm Visa kỹ năng tay nghề cao (高度人材ポイント) và trợ cấp bằng cấp tại các công ty IT Nhật Bản!
+              Tổng đầu tư khoảng ~13,000 Yên. Chứng chỉ có giá trị vĩnh viễn, được cộng 5 điểm Visa kỹ năng tay nghề cao (高度人材ポイント) và trợ cấp bằng cấp tại các công ty IT Nhật Bản.
             </p>
           </div>
         </BentoCard>
