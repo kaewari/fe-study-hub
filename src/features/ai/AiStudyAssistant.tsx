@@ -188,9 +188,10 @@ Quy tắc trả lời:
           }),
         });
 
-        // If the configured model returns 404 or deprecated, fallback to gemini-3.8-flash or gemini-flash-latest
-        if (!res.ok && res.status === 404 && preferredModel !== 'gemini-3.8-flash') {
-          endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${candidateKey.key}`;
+        // If the configured model returns 404 or 503 (high demand spike on preview), fallback seamlessly
+        if (!res.ok && (res.status === 404 || res.status === 503)) {
+          const fallbackModel = preferredModel === 'gemini-3.8-flash' ? 'gemini-3.6-flash' : 'gemini-3.8-flash';
+          endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${fallbackModel}:generateContent?key=${candidateKey.key}`;
           res = await fetch(endpoint, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
