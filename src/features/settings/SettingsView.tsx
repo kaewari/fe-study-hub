@@ -3,7 +3,8 @@ import { BentoCard } from '../../shared/components/BentoCard';
 import { Badge } from '../../shared/components/Badge';
 import { Button } from '../../shared/components/Button';
 import { ApiKeyConnection, UserSettings } from '../../shared/types';
-import { Download, Upload, RefreshCw, FileSpreadsheet } from 'lucide-react';
+import { Download, Upload, RefreshCw, FileSpreadsheet, Palette, Check } from 'lucide-react';
+import { THEMES_LIST } from '../../shared/constants/themes';
 
 interface SettingsViewProps {
   apiKeys: ApiKeyConnection[];
@@ -68,6 +69,59 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
+      {/* Theme Selector Bento Card */}
+      <BentoCard
+        title="🎨 Giao Diện & Màu Sắc Hệ Thống (Theme Engine)"
+        subtitle="Chọn theme màu được cộng đồng lập trình viên & kỹ sư quốc tế ưa chuộng nhất"
+        badge={
+          <Badge variant="blue">
+            <Palette size={12} /> {THEMES_LIST.find((t) => t.id === (settings.theme || 'sumi'))?.name || 'Sumi & Slate'}
+          </Badge>
+        }
+      >
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-2">
+          {THEMES_LIST.map((th) => {
+            const isSelected = (settings.theme || 'sumi') === th.id;
+            return (
+              <button
+                key={th.id}
+                type="button"
+                onClick={() => onUpdateSettings({ ...settings, theme: th.id })}
+                className={`p-3 rounded-lg border text-left transition-all relative overflow-hidden flex flex-col justify-between ${
+                  isSelected
+                    ? 'border-blue-500 bg-sumi-850 ring-1 ring-blue-500 shadow-md'
+                    : 'border-sumi-800 bg-sumi-900/60 hover:bg-sumi-850 hover:border-sumi-700'
+                }`}
+              >
+                <div>
+                  <div className="flex items-center justify-between gap-1 mb-1">
+                    <span className="font-semibold text-xs text-sumi-100">{th.name}</span>
+                    {isSelected && (
+                      <span className="w-4 h-4 rounded-full bg-blue-500 text-white flex items-center justify-center shrink-0">
+                        <Check size={10} />
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-[10px] text-sumi-400 block mb-2">{th.jpName}</span>
+                  <p className="text-[11px] text-sumi-300 leading-tight mb-3">
+                    {th.description}
+                  </p>
+                </div>
+
+                {/* Palette Swatches */}
+                <div className="flex items-center gap-1.5 p-1.5 rounded bg-sumi-950 border border-sumi-800/80 shrink-0">
+                  <div className="w-3.5 h-3.5 rounded-sm border border-white/10 shrink-0" style={{ backgroundColor: th.preview.canvas }} title="Canvas" />
+                  <div className="w-3.5 h-3.5 rounded-sm border border-white/10 shrink-0" style={{ backgroundColor: th.preview.surface }} title="Surface" />
+                  <div className="w-3.5 h-3.5 rounded-sm border border-white/10 shrink-0" style={{ backgroundColor: th.preview.border }} title="Border" />
+                  <div className="w-3.5 h-3.5 rounded-sm border border-white/10 shrink-0" style={{ backgroundColor: th.preview.accent }} title="Accent" />
+                  <span className="text-[9px] font-mono text-sumi-400 ml-auto uppercase">{th.category}</span>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </BentoCard>
+
       {/* 6 Gemini Keys Manager */}
       <BentoCard
         title="Quản Lý 6 Gemini API Keys (Omniroute Integration)"

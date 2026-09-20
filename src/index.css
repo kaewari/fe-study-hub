@@ -3,31 +3,167 @@
 @tailwind utilities;
 
 @layer base {
+  /* 1. Default: Sumi & Slate (墨 - Japanese Charcoal) */
+  :root, [data-theme="sumi"] {
+    --color-sumi-950: 11 13 16;
+    --color-sumi-900: 17 20 25;
+    --color-sumi-850: 22 27 34;
+    --color-sumi-800: 34 41 51;
+    --color-sumi-700: 50 61 77;
+    --color-sumi-600: 71 86 108;
+    --color-sumi-400: 140 156 176;
+    --color-sumi-200: 203 213 225;
+    --color-sumi-100: 241 245 249;
+    --theme-accent: #3b82f6;
+    --scrollbar-track: #0b0d10;
+    --scrollbar-thumb: #222933;
+    --scrollbar-hover: #323d4d;
+  }
+
+  /* 2. Tokyo Night (東京の夜 - Vibrant Indigo) */
+  [data-theme="tokyo-night"] {
+    --color-sumi-950: 22 22 30;
+    --color-sumi-900: 26 27 38;
+    --color-sumi-850: 31 35 53;
+    --color-sumi-800: 47 53 73;
+    --color-sumi-700: 65 72 104;
+    --color-sumi-600: 86 95 137;
+    --color-sumi-400: 122 162 247;
+    --color-sumi-200: 169 177 214;
+    --color-sumi-100: 192 202 245;
+    --theme-accent: #7aa2f7;
+    --scrollbar-track: #16161e;
+    --scrollbar-thumb: #2f3549;
+    --scrollbar-hover: #414868;
+  }
+
+  /* 3. Catppuccin Mocha (カプチーノ - Soothing Pastel) */
+  [data-theme="catppuccin"] {
+    --color-sumi-950: 17 17 27;
+    --color-sumi-900: 24 24 37;
+    --color-sumi-850: 30 30 46;
+    --color-sumi-800: 49 50 68;
+    --color-sumi-700: 69 71 90;
+    --color-sumi-600: 88 91 112;
+    --color-sumi-400: 166 173 200;
+    --color-sumi-200: 205 214 244;
+    --color-sumi-100: 245 224 220;
+    --theme-accent: #cba6f7;
+    --scrollbar-track: #11111b;
+    --scrollbar-thumb: #313244;
+    --scrollbar-hover: #45475a;
+  }
+
+  /* 4. Nord (極北の冷気 - Arctic Frost) */
+  [data-theme="nord"] {
+    --color-sumi-950: 36 41 51;
+    --color-sumi-900: 46 52 64;
+    --color-sumi-850: 59 66 82;
+    --color-sumi-800: 67 76 94;
+    --color-sumi-700: 76 86 106;
+    --color-sumi-600: 94 129 172;
+    --color-sumi-400: 129 161 193;
+    --color-sumi-200: 216 222 233;
+    --color-sumi-100: 236 239 244;
+    --theme-accent: #88c0d0;
+    --scrollbar-track: #242933;
+    --scrollbar-thumb: #434c5e;
+    --scrollbar-hover: #4c566a;
+  }
+
+  /* 5. Dracula (ドラキュラ - High Contrast Gothic) */
+  [data-theme="dracula"] {
+    --color-sumi-950: 30 31 41;
+    --color-sumi-900: 40 42 54;
+    --color-sumi-850: 52 55 70;
+    --color-sumi-800: 68 71 90;
+    --color-sumi-700: 98 114 164;
+    --color-sumi-600: 121 136 180;
+    --color-sumi-400: 189 147 249;
+    --color-sumi-200: 226 232 240;
+    --color-sumi-100: 248 248 242;
+    --theme-accent: #bd93f9;
+    --scrollbar-track: #1e1f29;
+    --scrollbar-thumb: #44475a;
+    --scrollbar-hover: #6272a4;
+  }
+
+  /* 6. Rosé Pine (ロゼ・パイン - Warm Soho Minimalist) */
+  [data-theme="rose-pine"] {
+    --color-sumi-950: 20 18 29;
+    --color-sumi-900: 25 23 36;
+    --color-sumi-850: 31 29 46;
+    --color-sumi-800: 38 35 58;
+    --color-sumi-700: 62 56 89;
+    --color-sumi-600: 110 106 134;
+    --color-sumi-400: 144 140 170;
+    --color-sumi-200: 224 222 244;
+    --color-sumi-100: 244 237 232;
+    --theme-accent: #ebbcba;
+    --scrollbar-track: #14121d;
+    --scrollbar-thumb: #26233a;
+    --scrollbar-hover: #3e3859;
+  }
+
+  /* 7. GitHub Dark Dimmed (ギットハブ - Developer Standard) */
+  [data-theme="github-dark"] {
+    --color-sumi-950: 28 33 40;
+    --color-sumi-900: 34 39 46;
+    --color-sumi-850: 45 51 59;
+    --color-sumi-800: 55 62 71;
+    --color-sumi-700: 68 76 86;
+    --color-sumi-600: 99 110 123;
+    --color-sumi-400: 118 131 144;
+    --color-sumi-200: 173 186 199;
+    --color-sumi-100: 205 217 229;
+    --theme-accent: #539bf5;
+    --scrollbar-track: #1c2128;
+    --scrollbar-thumb: #373e47;
+    --scrollbar-hover: #444c56;
+  }
+
+  /* 8. One Dark Pro (ワン・ダーク - Atom Classic) */
+  [data-theme="one-dark"] {
+    --color-sumi-950: 30 34 39;
+    --color-sumi-900: 33 37 43;
+    --color-sumi-850: 40 44 52;
+    --color-sumi-800: 53 59 69;
+    --color-sumi-700: 75 82 99;
+    --color-sumi-600: 92 99 112;
+    --color-sumi-400: 171 178 191;
+    --color-sumi-200: 220 223 228;
+    --color-sumi-100: 255 255 255;
+    --theme-accent: #61afef;
+    --scrollbar-track: #1e2227;
+    --scrollbar-thumb: #353b45;
+    --scrollbar-hover: #4b5263;
+  }
+
   body {
-    @apply bg-sumi-950 text-sumi-100 font-sans antialiased;
+    @apply bg-sumi-950 text-sumi-100 font-sans antialiased transition-colors duration-300;
   }
 }
 
-/* Tactile Japanese Engineering Custom Scrollbars */
+/* Custom Scrollbars tied to theme CSS variables */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #0b0d10;
+  background: var(--scrollbar-track, #0b0d10);
 }
 ::-webkit-scrollbar-thumb {
-  background: #222933;
+  background: var(--scrollbar-thumb, #222933);
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #323d4d;
+  background: var(--scrollbar-hover, #323d4d);
 }
 
-/* Subtle border glow utilities without purple AI slop */
+/* Subtle border utilities */
 .border-tactile {
-  border: 1px solid #222933;
+  border: 1px solid rgb(var(--color-sumi-800));
 }
 .border-tactile-focus {
-  border: 1px solid #3b82f6;
+  border: 1px solid var(--theme-accent, #3b82f6);
 }

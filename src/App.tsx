@@ -106,6 +106,12 @@ export const App: React.FC = () => {
     localStorage.setItem('fe_user_settings', JSON.stringify(settings));
   }, [settings]);
 
+  // Apply Active Theme to Root DOM
+  useEffect(() => {
+    const theme = settings.theme || 'sumi';
+    document.documentElement.setAttribute('data-theme', theme);
+  }, [settings.theme]);
+
   useEffect(() => {
     localStorage.setItem('fe_api_keys', JSON.stringify(apiKeys));
   }, [apiKeys]);

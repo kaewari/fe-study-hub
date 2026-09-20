@@ -9,15 +9,15 @@ export default {
     extend: {
       colors: {
         sumi: {
-          950: '#0b0d10', // Deep matte charcoal canvas
-          900: '#111419', // Primary bento surface
-          850: '#161b22', // Elevated interactive surface
-          800: '#222933', // Crisp 1px technical border
-          700: '#323d4d',
-          600: '#47566c',
-          400: '#8c9cb0',
-          200: '#cbd5e1',
-          100: '#f1f5f9',
+          950: 'rgb(var(--color-sumi-950) / <alpha-value>)',
+          900: 'rgb(var(--color-sumi-900) / <alpha-value>)',
+          850: 'rgb(var(--color-sumi-850) / <alpha-value>)',
+          800: 'rgb(var(--color-sumi-800) / <alpha-value>)',
+          700: 'rgb(var(--color-sumi-700) / <alpha-value>)',
+          600: 'rgb(var(--color-sumi-600) / <alpha-value>)',
+          400: 'rgb(var(--color-sumi-400) / <alpha-value>)',
+          200: 'rgb(var(--color-sumi-200) / <alpha-value>)',
+          100: 'rgb(var(--color-sumi-100) / <alpha-value>)',
         },
         tokyo: {
           blue: '#2563eb',

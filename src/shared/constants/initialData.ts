@@ -10,6 +10,7 @@ export const INITIAL_SETTINGS: UserSettings = {
   pomodoroBreakMin: 5,
   streakDays: 1,
   lastStudiedDate: '2026-09-20',
+  theme: 'sumi',
 };
 
 // Extract environment keys if available

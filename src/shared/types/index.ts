@@ -157,6 +157,16 @@ export interface ApiKeyConnection {
   lastUsedAt?: string;
 }
 
+export type AppTheme =
+  | 'sumi'
+  | 'tokyo-night'
+  | 'catppuccin'
+  | 'nord'
+  | 'dracula'
+  | 'rose-pine'
+  | 'github-dark'
+  | 'one-dark';
+
 export interface UserSettings {
   pin: string;
   isPinEnabled: boolean;
@@ -167,4 +177,5 @@ export interface UserSettings {
   pomodoroBreakMin: number;
   streakDays: number;
   lastStudiedDate?: string;
+  theme?: AppTheme;
 }
