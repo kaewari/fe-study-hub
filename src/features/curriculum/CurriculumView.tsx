@@ -26,7 +26,6 @@ export const CurriculumView: React.FC<CurriculumViewProps> = ({
         {books.map((book) => {
           const total = book.chapters.length;
           const completed = book.chapters.filter((c) => c.studyStatus === 'completed').length;
-          const scanned = book.chapters.filter((c) => c.scanStatus === 'scanned').length;
           const pct = Math.round((completed / total) * 100);
           const isSelected = activeBookId === book.id;
 
@@ -53,8 +52,8 @@ export const CurriculumView: React.FC<CurriculumViewProps> = ({
               </div>
 
               <div className="flex justify-between text-[11px] font-mono text-sumi-400">
-                <span>Xong: <strong className="text-sumi-200">{completed}/{total}</strong></span>
-                <span>Scan: <strong className="text-sumi-200">{scanned}/{total}</strong></span>
+                <span>Hoàn thành: <strong className="text-sumi-200">{completed}/{total}</strong> chương</span>
+                <span>Tiến độ: <strong className="text-sumi-200">{pct}%</strong></span>
               </div>
             </button>
           );
@@ -74,7 +73,6 @@ export const CurriculumView: React.FC<CurriculumViewProps> = ({
                 <th className="py-2.5 px-3 w-16">Chương</th>
                 <th className="py-2.5 px-3">Tên chương / Chủ đề kiến thức</th>
                 <th className="py-2.5 px-3">Trang</th>
-                <th className="py-2.5 px-3 text-center">Trạng thái Scan</th>
                 <th className="py-2.5 px-3 text-center">Tiến độ học</th>
                 <th className="py-2.5 px-3 text-center">Mức độ hiểu</th>
                 <th className="py-2.5 px-3 text-center">Thao tác</th>
@@ -95,24 +93,6 @@ export const CurriculumView: React.FC<CurriculumViewProps> = ({
 
                   <td className="py-3 px-3 font-mono text-sumi-400 whitespace-nowrap">
                     {ch.pageRange}
-                  </td>
-
-                  <td className="py-3 px-3 text-center whitespace-nowrap">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        onUpdateChapter(activeBook.id, ch.id, {
-                          scanStatus: ch.scanStatus === 'scanned' ? 'unscanned' : 'scanned',
-                        })
-                      }
-                      className={`text-xs px-2.5 py-1 rounded-md font-mono border transition-colors ${
-                        ch.scanStatus === 'scanned'
-                          ? 'bg-emerald-500/10 border-emerald-500/25 text-emerald-400'
-                          : 'bg-sumi-950/60 border-sumi-800 text-sumi-400 hover:text-sumi-200'
-                      }`}
-                    >
-                      {ch.scanStatus === 'scanned' ? 'Đã scan' : 'Chưa scan'}
-                    </button>
                   </td>
 
                   <td className="py-3 px-3 text-center whitespace-nowrap">

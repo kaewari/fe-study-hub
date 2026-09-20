@@ -201,6 +201,74 @@ async function run() {
     }
     console.log('   => PASS: AI Assistant drawer opened smoothly with all interactive controls.');
 
+    // 6b. Close AI Assistant Drawer
+    await send('Runtime.evaluate', {
+      expression: `
+        (() => {
+          const closeBtn = document.querySelector('button[title*="Đóng trợ giảng"]');
+          if (closeBtn) closeBtn.click();
+        })()
+      `,
+    });
+    await new Promise((r) => setTimeout(r, 400));
+
+    // 6c. Verify PlannerView has NO scan column
+    console.log('\nChecking Planner View for any remaining scan references...');
+    await send('Runtime.evaluate', {
+      expression: `
+        (() => {
+          const btn = Array.from(document.querySelectorAll('button')).find(b => b.innerText.includes('Kế hoạch 30 ngày'));
+          if (btn) btn.click();
+        })()
+      `,
+    });
+    await new Promise((r) => setTimeout(r, 600));
+    const plannerCheck = await send('Runtime.evaluate', {
+      expression: `
+        (() => {
+          const table = document.querySelector('table');
+          const text = table ? table.innerText : '';
+          return {
+            hasScanColumn: text.includes('Scan') || text.includes('Đã scan')
+          };
+        })()
+      `,
+      returnByValue: true,
+    });
+    console.log('   - Planner table has scan column/button:', plannerCheck.result.value.hasScanColumn);
+    if (plannerCheck.result.value.hasScanColumn) {
+      throw new Error('FAIL: PlannerView still has Scan column or buttons!');
+    }
+    console.log('   => PASS: PlannerView has zero scan columns.');
+
+    // 6d. Verify CurriculumView has NO scan column or card stats
+    console.log('\nChecking Curriculum View for any remaining scan references...');
+    await send('Runtime.evaluate', {
+      expression: `
+        (() => {
+          const btn = Array.from(document.querySelectorAll('button')).find(b => b.innerText.includes('Giáo trình 3 cuốn'));
+          if (btn) btn.click();
+        })()
+      `,
+    });
+    await new Promise((r) => setTimeout(r, 600));
+    const curriculumCheck = await send('Runtime.evaluate', {
+      expression: `
+        (() => {
+          const text = document.body.innerText;
+          return {
+            hasScanStatus: text.includes('Trạng thái Scan') || text.includes('Đã scan') || text.includes('Chưa scan')
+          };
+        })()
+      `,
+      returnByValue: true,
+    });
+    console.log('   - Curriculum has scan status:', curriculumCheck.result.value.hasScanStatus);
+    if (curriculumCheck.result.value.hasScanStatus) {
+      throw new Error('FAIL: CurriculumView still has Scan references!');
+    }
+    console.log('   => PASS: CurriculumView has zero scan references.');
+
     // 7. Capture Screenshot
     const screenshotData = await send('Page.captureScreenshot', { format: 'png' });
     const screenshotPath = 'artifacts/verified_notes_and_ai.png';

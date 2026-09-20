@@ -17,10 +17,10 @@
 
 - **📊 Dashboard Bento KPIs**: Theo dõi 135 giờ học mục tiêu, tỷ lệ sẵn sàng thi CBT, tiến độ 3 đầu sách và cảnh báo bù giờ cuối tuần.
 - **📅 Planner & Weekend Buffer**: Lịch học 100 ngày từ 2026-09-21 (Tuần kickstart nghỉ lễ 2.5-3h/ngày, ngày thường 1h/ngày, cuối tuần 2.5h/ngày). Tự động dồn thiếu hụt ngày thường vào đệm cuối tuần.
-- **📷 Camera Scan & Gemini Vision OCR**:
-  - Hỗ trợ chụp/tải ảnh trang sách từ điện thoại (vFlat / Adobe Scan).
-  - Tự động luân chuyển **6 Gemini API Keys (Omniroute Failover)**: tự động chuyển key khi gặp lỗi HTTP 429 Rate Limit.
-  - 3 bộ prompt chuyên biệt chuẩn hóa Markdown theo cấu trúc riêng của 3 đầu sách.
+- **📝 Ghi Chú Học Tập & AI Tutor Trợ Giảng Toàn Năng**:
+  - Ghi chép lý thuyết, công thức, mã giả IPA và mẹo phòng thi phân loại theo 5 phân nhánh Syllabus FE.
+  - Trợ giảng AI toàn năng nổi (`Ctrl + J`) hỗ trợ giải thích cặn kẽ thuật toán, thuật ngữ tiếng Nhật và bẫy đề thi.
+  - Tự động luân chuyển **6 Gemini API Keys (Omniroute Failover)** chống nghẽn HTTP 429 Rate Limit.
 - **🧮 Xưởng Luyện Thuật Toán (Subject B Workshop)**:
   - Bảng chạy biến Trace Table tương tác trực tiếp (hỗ trợ nhập từng bước biến `i, j, m, arr`, phát hiện bẫy mảng bắt đầu từ 1).
   - 5 bài toán mẫu tích hợp: Tìm kiếm nhị phân, Sắp xếp nổi bọt, Euclid USCLN, Tháp Hà Nội, Duyệt cây nhị phân.

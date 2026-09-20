@@ -186,7 +186,7 @@ export const StudyNotesView: React.FC<StudyNotesViewProps> = ({
               </span>
             </div>
             <p className="text-xs text-sumi-400 mt-0.5">
-              Học chay không cần scan sách. Ghi lại các mẹo thi, bảng tra cứu, quy tắc mã giả IPA và hỏi AI Trợ giảng trực tiếp.
+              Ghi lại các công thức, mẹo thi, bảng tra cứu, quy tắc mã giả IPA và hỏi AI Trợ giảng trực tiếp.
             </p>
           </div>
         </div>

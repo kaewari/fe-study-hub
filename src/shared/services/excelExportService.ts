@@ -24,7 +24,6 @@ export function exportStudyDataToExcel(
     '科目 (Môn)': s.subject,
     '章・内容 (Chương/Bài)': s.chapterTitle,
     '集中度 (1-5★)': '★'.repeat(s.focusLevel || 0),
-    'Scan確認': s.scanVerified ? '済' : '未',
     '状態': s.completed ? '完了' : '未着手',
     '学習メモ': s.notes,
   }));
@@ -41,7 +40,6 @@ export function exportStudyDataToExcel(
         '章の名称 (Tên chương)': ch.title,
         '分野 (Syllabus 9.1)': ch.jpCategory,
         'ページ範囲': ch.pageRange,
-        'スキャン状況': ch.scanStatus === 'scanned' ? '済' : '未',
         '完了状態': ch.studyStatus === 'completed' ? '完了' : (ch.studyStatus === 'in_progress' ? '進行中' : '未着手'),
         '理解度 (1-5★)': '★'.repeat(ch.comprehension || 0),
         '完了日': ch.completedDate || '',

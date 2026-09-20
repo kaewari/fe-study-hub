@@ -97,7 +97,6 @@ export const PlannerView: React.FC<PlannerViewProps> = ({
                 <th className="py-2.5 px-3 text-center">Bù cuối tuần</th>
                 <th className="py-2.5 px-3">Môn & Nội dung chương</th>
                 <th className="py-2.5 px-3 text-center">Tập trung</th>
-                <th className="py-2.5 px-3 text-center">Scan</th>
                 <th className="py-2.5 px-3 text-center">Trạng thái</th>
               </tr>
             </thead>
@@ -181,20 +180,6 @@ export const PlannerView: React.FC<PlannerViewProps> = ({
                           </button>
                         ))}
                       </div>
-                    </td>
-
-                    <td className="py-3 px-3 text-center">
-                      <button
-                        type="button"
-                        onClick={() => handleUpdateItem(day.id, { scanVerified: !day.scanVerified })}
-                        className={`text-xs font-mono px-2 py-0.5 rounded border transition-colors ${
-                          day.scanVerified
-                            ? 'bg-emerald-950/60 border-emerald-800 text-emerald-300'
-                            : 'bg-sumi-850 border-sumi-700 text-sumi-400'
-                        }`}
-                      >
-                        {day.scanVerified ? 'Đã scan' : 'Chưa'}
-                      </button>
                     </td>
 
                     <td className="py-3 px-3 text-center">
